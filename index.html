@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>World Cup 2026 Dashboard</title>
+  <title>World Cup 2026 Update</title>
 
   <style>
     * {
@@ -42,18 +42,18 @@
       box-shadow: var(--shadow);
     }
 
-    .topbar {
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      background: #fff;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
+.topbar {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 
     .brand h1 {
       margin: 0;
@@ -82,14 +82,18 @@
       background: var(--soft);
     }
 
-    .tabs {
-      display: flex;
-      gap: 4px;
-      padding: 0 24px;
-      background: #fff;
-      border-bottom: 1px solid var(--line);
-      overflow-x: auto;
-    }
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+
+  position: sticky;
+  top: var(--topbar-height, 72px);
+  z-index: 9;
+}
 
     .tab-btn {
       border: none;
@@ -205,7 +209,7 @@
 
     .progress-row {
       display: grid;
-      grid-template-columns: 130px 1fr 52px;
+      grid-template-columns: 150px 1fr 52px;
       gap: 12px;
       align-items: center;
       margin: 14px 0;
@@ -667,7 +671,7 @@
       }
 
       .progress-row {
-        grid-template-columns: 92px 1fr 42px;
+        grid-template-columns: 110px 1fr 42px;
         gap: 8px;
       }
 
@@ -818,6 +822,28 @@
     const STADIUMS_API_URL = "https://worldcup26.ir/get/stadiums";
     const PROXY_URL = "https://api.allorigins.win/get?url=";
 
+    const STAGE_NAMES = {
+      GROUP: "Group Stage",
+      R32: "Round of 32",
+      R16: "Round of 16",
+      QF: "Quarter-finals",
+      SF: "Semi-finals",
+      THIRD: "Third place play-off",
+      FINAL: "Final",
+      OTHER: "Match"
+    };
+
+    const STAGE_ORDER = [
+      STAGE_NAMES.GROUP,
+      STAGE_NAMES.R32,
+      STAGE_NAMES.R16,
+      STAGE_NAMES.QF,
+      STAGE_NAMES.SF,
+      STAGE_NAMES.THIRD,
+      STAGE_NAMES.FINAL,
+      STAGE_NAMES.OTHER
+    ];
+
     const statusEl = document.getElementById("api-status");
 
     let gamesData = [];
@@ -951,8 +977,16 @@
       const s = String(raw).trim();
       if (!s) return "";
 
-      const match = s.match(/[A-H]/i);
-      return match ? match[0].toUpperCase() : s.toUpperCase();
+      const groupMatch = s.match(/\b(?:group|grp)[\s:_-]*([A-H])\b/i);
+      if (groupMatch) return groupMatch[1].toUpperCase();
+
+      const singleLetter = s.match(/^\s*([A-H])\s*$/i);
+      if (singleLetter) return singleLetter[1].toUpperCase();
+
+      const looseLetter = s.match(/\b([A-H])\b/i);
+      if (looseLetter) return looseLetter[1].toUpperCase();
+
+      return "";
     }
 
     function displayGroup(group) {
@@ -960,20 +994,122 @@
       return g ? `Group ${g}` : "Group";
     }
 
+    function getStageCandidateText(game) {
+      const candidates = [
+        game.stage,
+        game.stage_name,
+        game.round,
+        game.round_name,
+        game.phase,
+        game.phase_name,
+        game.type,
+        game.match_type,
+        game.matchType,
+        game.category,
+        game.title,
+        game.name
+      ];
+
+      return candidates
+        .filter(v => v !== undefined && v !== null)
+        .map(v => {
+          if (typeof v === "object") {
+            return [
+              v.name,
+              v.name_en,
+              v.title,
+              v.label,
+              v.type,
+              v.round,
+              v.stage
+            ].filter(Boolean).join(" ");
+          }
+
+          return String(v);
+        })
+        .join(" ")
+        .trim();
+    }
+
+    function getMatchStage(game) {
+      const explicitText = getStageCandidateText(game);
+      const text = explicitText.toLowerCase();
+      const compact = text.replace(/[^a-z0-9]/g, "");
+
+      if (
+        text.includes("third place") ||
+        text.includes("third-place") ||
+        text.includes("3rd place") ||
+        text.includes("bronze") ||
+        compact.includes("thirdplace") ||
+        compact.includes("3rdplace")
+      ) {
+        return STAGE_NAMES.THIRD;
+      }
+
+      if (
+        text.includes("semi") ||
+        compact.includes("semifinal") ||
+        compact.includes("semifinals")
+      ) {
+        return STAGE_NAMES.SF;
+      }
+
+      if (
+        text.includes("quarter") ||
+        compact.includes("quarterfinal") ||
+        compact.includes("quarterfinals")
+      ) {
+        return STAGE_NAMES.QF;
+      }
+
+      if (
+        text.includes("round of 32") ||
+        text.includes("round-of-32") ||
+        text.includes("last 32") ||
+        text.includes("r32") ||
+        text.includes("1/16") ||
+        compact.includes("roundof32") ||
+        compact.includes("round32") ||
+        compact.includes("last32")
+      ) {
+        return STAGE_NAMES.R32;
+      }
+
+      if (
+        text.includes("round of 16") ||
+        text.includes("round-of-16") ||
+        text.includes("last 16") ||
+        text.includes("r16") ||
+        text.includes("1/8") ||
+        compact.includes("roundof16") ||
+        compact.includes("round16") ||
+        compact.includes("last16")
+      ) {
+        return STAGE_NAMES.R16;
+      }
+
+      if (
+        text === "final" ||
+        text.includes(" final") ||
+        text.startsWith("final") ||
+        compact === "final"
+      ) {
+        return STAGE_NAMES.FINAL;
+      }
+
+      if (
+        text.includes("group") ||
+        normalizeGroup(game.group || game.group_name || game.group_letter)
+      ) {
+        return STAGE_NAMES.GROUP;
+      }
+
+      return STAGE_NAMES.OTHER;
+    }
+
     function getMatchCategoryLabel(game) {
-      const group = getGroupNameFromGame(game);
-
-      if (group) {
-        return displayGroup(group);
-      }
-
-      const stage = normalizeStage(game);
-
-      if (stage && stage !== "Other") {
-        return stage;
-      }
-
-      return "Match";
+      return getMatchStage(game);
     }
 
     function getSectionTitle(sectionGames, sectionDate) {
@@ -1341,29 +1477,9 @@
       return getRedCards(game, "home").length + getRedCards(game, "away").length;
     }
 
-    function normalizeStage(game) {
-      const raw = String(
-        game.stage ||
-        game.round ||
-        game.type ||
-        game.match_type ||
-        ""
-      ).toLowerCase();
-
-      if (raw.includes("group")) return "Group Stage";
-      if (raw.includes("32")) return "Round of 32";
-      if (raw.includes("16")) return "Round of 16";
-      if (raw.includes("quarter")) return "Quarter Final";
-      if (raw.includes("semi")) return "Semi Final";
-      if (raw.includes("third")) return "Third Place";
-      if (raw.includes("final")) return "Final";
-
-      if (game.group) return "Group Stage";
-
-      return "Other";
-    }
-
     function getGroupNameFromGame(game) {
+      if (getMatchStage(game) !== STAGE_NAMES.GROUP) return "";
+
       const explicitGroup = normalizeGroup(
         game.group ||
         game.group_name ||
@@ -1372,32 +1488,15 @@
 
       if (explicitGroup) return explicitGroup;
 
-      const stage = normalizeStage(game);
-
-      if (stage === "Group Stage") {
-        const home = getTeam(game, "home");
-        return normalizeGroup(home.group);
-      }
-
-      return "";
+      const home = getTeam(game, "home");
+      return normalizeGroup(home.group);
     }
 
     function getStageStats(games) {
-      const order = [
-        "Group Stage",
-        "Round of 32",
-        "Round of 16",
-        "Quarter Final",
-        "Semi Final",
-        "Third Place",
-        "Final",
-        "Other"
-      ];
-
       const map = {};
 
       games.forEach(game => {
-        const stage = normalizeStage(game);
+        const stage = getMatchStage(game);
 
         if (!map[stage]) {
           map[stage] = {
@@ -1411,7 +1510,7 @@
         if (isFinished(game)) map[stage].done += 1;
       });
 
-      return order
+      return STAGE_ORDER
         .filter(stage => map[stage])
         .map(stage => map[stage]);
     }
@@ -1787,7 +1886,7 @@
               <span class="badge blue">${escapeHtml(getRelativeDateLabel(d))}</span>
             </div>
             <div class="mini-card-sub">
-              ${escapeHtml(getMatchCategoryLabel(game))} · ${escapeHtml(formatWibDateTime(d))}<br>
+              ${escapeHtml(getMatchBoxLabel(game))} · ${escapeHtml(formatWibDateTime(d))}<br>
               ${escapeHtml(stadium.city || stadium.name || "")}${stadium.city || stadium.name ? " · " : ""}${escapeHtml(formatVenueTime(game))}
             </div>
           </div>
@@ -1879,7 +1978,7 @@
             </div>
             <div class="mini-card-sub">
               ${escapeHtml(item.reason)}<br>
-              ${escapeHtml(getMatchCategoryLabel(item.game))} · ${escapeHtml(formatWibDateTime(d))}
+              ${escapeHtml(getMatchBoxLabel(item.game))} · ${escapeHtml(formatWibDateTime(d))}
             </div>
           </div>
         `;
@@ -1928,7 +2027,7 @@
               return `
                 <div class="match-card">
                   <div>
-                    <div class="group-label">${escapeHtml(getMatchCategoryLabel(game))}</div>
+                    <div class="group-label">${escapeHtml(getMatchBoxLabel(game))}</div>
 
                     <div class="team-row">
                       <img class="flag" src="${escapeHtml(home.flag)}" alt="" onerror="this.style.visibility='hidden'">
@@ -2119,6 +2218,16 @@
       renderVenues();
     }
 
+function getMatchBoxLabel(game) {
+  const stage = getMatchCategoryLabel(game);
+  const group = getGroupNameFromGame(game);
+
+  if (stage === STAGE_NAMES.GROUP && group) {
+    return `${stage} · Group ${group}`;
+  }
+
+  return stage;
+}
     async function fetchData() {
       showStatus("Loading data...");
 
@@ -2167,7 +2276,22 @@
       }
     }
 
-    window.onload = fetchData;
+function updateStickyTabPosition() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return;
+
+  document.documentElement.style.setProperty(
+    "--topbar-height",
+    topbar.offsetHeight + "px"
+  );
+}
+
+window.addEventListener("resize", updateStickyTabPosition);
+
+window.onload = function () {
+  updateStickyTabPosition();
+  fetchData();
+};
   </script>
 </body>
 </html>
