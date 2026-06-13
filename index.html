@@ -285,23 +285,93 @@
       line-height: 1.35;
     }
 
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      align-items: stretch;
-    }
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
 
-    .dashboard-grid .panel {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
+.dashboard-grid .panel {
+  height: auto;
+}
 
-    .dashboard-grid #progress-container,
-    .dashboard-grid #risk-list {
-      flex: 1;
-    }
+.progress-summary {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.progress-summary strong {
+  color: var(--text);
+}
+    
+.progress-count {
+  margin-top: 3px;
+  font-size: 10.5px;
+  color: var(--muted);
+  font-weight: 500;
+  line-height: 1.25;
+}
+.risk-list {
+  display: block;
+}
+
+.group-health-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.group-health-column {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.health-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: #fff;
+}
+
+.health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.health-title {
+  font-size: 12.5px;
+  font-weight: 750;
+  margin: 0;
+}
+
+.health-count {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.health-progress {
+  height: 6px;
+  background: #eef2f7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.health-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
 
     .two-col {
       display: grid;
@@ -909,10 +979,10 @@
         border-radius: 15px;
       }
 
-      .progress-row {
-        grid-template-columns: 110px 1fr 42px;
-        gap: 8px;
-      }
+.progress-row {
+  grid-template-columns: 125px 1fr 42px;
+  gap: 8px;
+}
 
       .progress-name {
         font-size: 11px;
@@ -986,6 +1056,22 @@
       }
 
       .team-cell span {
+        font-size: 10.5px;
+      }
+      .group-health-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .health-item {
+        padding: 8px 9px;
+      }
+      
+      .health-title {
+        font-size: 12px;
+      }
+      
+      .health-count {
         font-size: 10.5px;
       }
     }
@@ -2103,66 +2189,93 @@ function normalizeGroup(value) {
       `).join("");
     }
 
-    function renderProgress() {
-      const stats = getStageStats(gamesData);
+function renderProgress() {
+  const stats = getStageStats(gamesData);
 
-      if (!stats.length) {
-        document.getElementById("progress-container").innerHTML = `<div class="empty-state">No stage data available.</div>`;
-        return;
-      }
+  if (!stats.length) {
+    document.getElementById("progress-container").innerHTML = `<div class="empty-state">No stage data available.</div>`;
+    return;
+  }
 
-      document.getElementById("progress-container").innerHTML = stats.map(row => {
-        const pct = row.total ? Math.round((row.done / row.total) * 100) : 0;
+  document.getElementById("progress-container").innerHTML = stats.map(row => {
+    const pct = row.total ? Math.round((row.done / row.total) * 100) : 0;
 
-        return `
-          <div class="progress-row">
-            <div class="progress-name">${escapeHtml(row.stage)}</div>
-            <div class="progress-track">
-              <div class="progress-fill" style="width:${pct}%"></div>
-            </div>
-            <div class="progress-percent">${pct}%</div>
-          </div>
-        `;
-      }).join("");
-    }
+    return `
+      <div class="progress-row">
+        <div class="progress-name">
+          <div>${escapeHtml(row.stage)}</div>
+          <div class="progress-count">${row.done} / ${row.total} matches</div>
+        </div>
 
-    function renderGroupHealth() {
-      if (!standingsData.length) {
-        document.getElementById("risk-list").innerHTML = `<div class="empty-state">No group data available.</div>`;
-        return;
-      }
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
 
-      document.getElementById("risk-list").innerHTML = standingsData.map(group => {
-        const groupGames = gamesData.filter(game => getGroupNameFromGame(game) === group.name);
+        <div class="progress-percent">${pct}%</div>
+      </div>
+    `;
+  }).join("");
+}
 
-        const total = groupGames.length || (
-          group.rows.length > 1
-            ? group.rows.length * (group.rows.length - 1) / 2
-            : group.rows.length
-        );
+function renderGroupHealth() {
+  if (!standingsData.length) {
+    document.getElementById("risk-list").innerHTML = `<div class="empty-state">No group data available.</div>`;
+    return;
+  }
 
-        const actual = groupGames.filter(isFinished).length;
-        const pct = total ? Math.round((actual / total) * 100) : 0;
+  const groups = standingsData
+    .map(group => {
+      const groupGames = gamesData.filter(game => getGroupNameFromGame(game) === group.name);
 
-        return `
-          <div class="mini-card">
-            <div class="health-row">
-              <div class="health-main">
-                <div class="health-title">${escapeHtml(displayGroup(group.name))}</div>
-                <div class="health-sub">Actual matches: ${actual} / ${total}</div>
-                <div class="health-progress">
-                  <div class="health-progress-fill" style="width:${pct}%"></div>
-                </div>
-              </div>
+      const total = groupGames.length || (
+        group.rows.length > 1
+          ? group.rows.length * (group.rows.length - 1) / 2
+          : group.rows.length
+      );
 
-              <span class="badge ${pct === 100 ? "green" : pct > 0 ? "blue" : "gray"}">
-                ${actual}/${total}
-              </span>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
+      const actual = groupGames.filter(isFinished).length;
+      const pct = total ? Math.round((actual / total) * 100) : 0;
+
+      return {
+        name: group.name,
+        title: displayGroup(group.name),
+        actual,
+        total,
+        pct
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const leftGroups = groups.filter(group => group.name >= "A" && group.name <= "F");
+  const rightGroups = groups.filter(group => group.name >= "G" && group.name <= "L");
+
+  function renderHealthColumn(items) {
+    return items.map(group => `
+      <div class="health-item">
+        <div class="health-row">
+          <div class="health-title">${escapeHtml(group.title)}</div>
+          <div class="health-count">${group.actual}/${group.total} matches</div>
+        </div>
+
+        <div class="health-progress">
+          <div class="health-progress-fill" style="width:${group.pct}%"></div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  document.getElementById("risk-list").innerHTML = `
+    <div class="group-health-grid">
+      <div class="group-health-column">
+        ${renderHealthColumn(leftGroups)}
+      </div>
+
+      <div class="group-health-column">
+        ${renderHealthColumn(rightGroups)}
+      </div>
+    </div>
+  `;
+}
 
     function getMatchTitle(game) {
       const home = getTeam(game, "home").name;
