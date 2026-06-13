@@ -968,26 +968,26 @@
       return map[name] || name;
     }
 
-    function normalizeGroup(value) {
-      if (value === null || value === undefined) return "";
+function normalizeGroup(value) {
+  if (value === null || value === undefined) return "";
 
-      let raw = value;
-      if (Array.isArray(raw)) raw = raw[0];
+  let raw = value;
+  if (Array.isArray(raw)) raw = raw[0];
 
-      const s = String(raw).trim();
-      if (!s) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
 
-      const groupMatch = s.match(/\b(?:group|grp)[\s:_-]*([A-H])\b/i);
-      if (groupMatch) return groupMatch[1].toUpperCase();
+  const groupMatch = s.match(/\b(?:group|grp)[\s:_-]*([A-L])\b/i);
+  if (groupMatch) return groupMatch[1].toUpperCase();
 
-      const singleLetter = s.match(/^\s*([A-H])\s*$/i);
-      if (singleLetter) return singleLetter[1].toUpperCase();
+  const singleLetter = s.match(/^\s*([A-L])\s*$/i);
+  if (singleLetter) return singleLetter[1].toUpperCase();
 
-      const looseLetter = s.match(/\b([A-H])\b/i);
-      if (looseLetter) return looseLetter[1].toUpperCase();
+  const looseLetter = s.match(/\b([A-L])\b/i);
+  if (looseLetter) return looseLetter[1].toUpperCase();
 
-      return "";
-    }
+  return "";
+}
 
     function displayGroup(group) {
       const g = normalizeGroup(group);
