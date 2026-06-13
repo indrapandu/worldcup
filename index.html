@@ -172,8 +172,20 @@
 
     .dashboard-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
+      align-items: stretch;
+    }
+
+    .dashboard-grid .panel {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dashboard-grid #progress-container,
+    .dashboard-grid #risk-list {
+      flex: 1;
     }
 
     .two-col {
@@ -254,6 +266,42 @@
       line-height: 1.45;
     }
 
+    .health-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .health-main {
+      min-width: 0;
+    }
+
+    .health-title {
+      font-size: 13px;
+      font-weight: 750;
+      margin-bottom: 5px;
+    }
+
+    .health-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .health-progress {
+      margin-top: 9px;
+      height: 7px;
+      background: #eef2f7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .health-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -297,7 +345,6 @@
       font-size: 14px;
     }
 
-    /* MATCHES */
     .day-header {
       margin: 16px -24px 0;
       padding: 13px 24px;
@@ -400,7 +447,6 @@
       vertical-align: -1px;
     }
 
-    /* TABLE */
     .table-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -489,7 +535,6 @@
       font-weight: 800;
     }
 
-    /* VENUES */
     .venue-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -708,8 +753,8 @@
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <h1>World Cup 2026 Dashboard</h1>
-        <p>Live API data · WIB time</p>
+        <h1>World Cup 2026 Control Dashboard</h1>
+        <p>Live API data · Project-control view · WIB time</p>
       </div>
       <button class="refresh-btn" onclick="fetchData()">Refresh</button>
     </header>
@@ -901,7 +946,6 @@
       if (value === null || value === undefined) return "";
 
       let raw = value;
-
       if (Array.isArray(raw)) raw = raw[0];
 
       const s = String(raw).trim();
@@ -914,6 +958,32 @@
     function displayGroup(group) {
       const g = normalizeGroup(group);
       return g ? `Group ${g}` : "Group";
+    }
+
+    function getMatchCategoryLabel(game) {
+      const group = getGroupNameFromGame(game);
+
+      if (group) {
+        return displayGroup(group);
+      }
+
+      const stage = normalizeStage(game);
+
+      if (stage && stage !== "Other") {
+        return stage;
+      }
+
+      return "Match";
+    }
+
+    function getSectionTitle(sectionGames, sectionDate) {
+      const labels = [...new Set(sectionGames.map(getMatchCategoryLabel).filter(Boolean))];
+
+      const prefix = labels.length === 1
+        ? labels[0]
+        : "Matches";
+
+      return `${prefix} · ${getRelativeDateLabel(sectionDate)}`;
     }
 
     function buildTeamLookup(teams) {
@@ -1063,7 +1133,6 @@
 
       const value = String(raw).trim();
 
-      // Format: MM/DD/YYYY HH:mm
       let match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
 
       if (match) {
@@ -1076,7 +1145,6 @@
         };
       }
 
-      // Format: YYYY-MM-DD HH:mm or YYYY-MM-DDTHH:mm
       match = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T\s]+(\d{1,2}):(\d{2})/);
 
       if (match) {
@@ -1273,11 +1341,6 @@
       return getRedCards(game, "home").length + getRedCards(game, "away").length;
     }
 
-    function getGroupNameFromGame(game) {
-      const home = getTeam(game, "home");
-      return normalizeGroup(game.group || home.group);
-    }
-
     function normalizeStage(game) {
       const raw = String(
         game.stage ||
@@ -1298,6 +1361,25 @@
       if (game.group) return "Group Stage";
 
       return "Other";
+    }
+
+    function getGroupNameFromGame(game) {
+      const explicitGroup = normalizeGroup(
+        game.group ||
+        game.group_name ||
+        game.group_letter
+      );
+
+      if (explicitGroup) return explicitGroup;
+
+      const stage = normalizeStage(game);
+
+      if (stage === "Group Stage") {
+        const home = getTeam(game, "home");
+        return normalizeGroup(home.group);
+      }
+
+      return "";
     }
 
     function getStageStats(games) {
@@ -1570,6 +1652,7 @@
       }).length;
 
       const now = getTodayWibDate();
+
       const upcoming24 = gamesData.filter(game => {
         const d = getWibDate(game);
         if (!d || isFinished(game)) return false;
@@ -1631,41 +1714,31 @@
 
       document.getElementById("risk-list").innerHTML = standingsData.map(group => {
         const groupGames = gamesData.filter(game => getGroupNameFromGame(game) === group.name);
-        const total = groupGames.length || (group.rows.length === 4 ? 6 : group.rows.length);
-        const done = groupGames.filter(isFinished).length;
 
-        let status = "Open";
-        let color = "blue";
-        let note = `${done}/${total} matches completed.`;
+        const total = groupGames.length || (
+          group.rows.length > 1
+            ? group.rows.length * (group.rows.length - 1) / 2
+            : group.rows.length
+        );
 
-        const riskRows = group.rows.filter(row => row.mp >= 1 && row.pts === 0 && row.gd <= -2);
-
-        if (done === 0) {
-          status = "Not Started";
-          color = "gray";
-          note = `${total} matches scheduled. No completed match yet.`;
-        } else if (total && done >= total) {
-          status = "Completed";
-          color = "green";
-          note = `All group matches completed.`;
-        } else if (riskRows.length) {
-          status = "Risk";
-          color = "red";
-          note = `${riskRows.map(r => r.name).join(", ")} under pressure after early result.`;
-        } else {
-          status = "Active";
-          color = "yellow";
-          const leader = group.rows[0]?.name || "";
-          note = `${done}/${total} matches completed.${leader ? " Current leader: " + leader + "." : ""}`;
-        }
+        const actual = groupGames.filter(isFinished).length;
+        const pct = total ? Math.round((actual / total) * 100) : 0;
 
         return `
           <div class="mini-card">
-            <div class="mini-card-title">
-              <span>${escapeHtml(displayGroup(group.name))}</span>
-              <span class="badge ${color}">${escapeHtml(status)}</span>
+            <div class="health-row">
+              <div class="health-main">
+                <div class="health-title">${escapeHtml(displayGroup(group.name))}</div>
+                <div class="health-sub">Actual matches: ${actual} / ${total}</div>
+                <div class="health-progress">
+                  <div class="health-progress-fill" style="width:${pct}%"></div>
+                </div>
+              </div>
+
+              <span class="badge ${pct === 100 ? "green" : pct > 0 ? "blue" : "gray"}">
+                ${actual}/${total}
+              </span>
             </div>
-            <div class="mini-card-sub">${escapeHtml(note)}</div>
           </div>
         `;
       }).join("");
@@ -1684,6 +1757,7 @@
         .filter(game => {
           const d = getWibDate(game);
           if (!d || isFinished(game)) return false;
+
           const diff = d.getTime() - now.getTime();
           return diff >= 0 && diff <= 7 * 24 * 60 * 60 * 1000;
         })
@@ -1705,7 +1779,6 @@
       document.getElementById("lookahead-list").innerHTML = upcoming.map(game => {
         const d = getWibDate(game);
         const stadium = getStadium(game);
-        const group = getGroupNameFromGame(game);
 
         return `
           <div class="mini-card">
@@ -1714,7 +1787,7 @@
               <span class="badge blue">${escapeHtml(getRelativeDateLabel(d))}</span>
             </div>
             <div class="mini-card-sub">
-              ${escapeHtml(group ? displayGroup(group) : normalizeStage(game))} · ${escapeHtml(formatWibDateTime(d))}<br>
+              ${escapeHtml(getMatchCategoryLabel(game))} · ${escapeHtml(formatWibDateTime(d))}<br>
               ${escapeHtml(stadium.city || stadium.name || "")}${stadium.city || stadium.name ? " · " : ""}${escapeHtml(formatVenueTime(game))}
             </div>
           </div>
@@ -1764,17 +1837,17 @@
             priority = 5;
             label = "High Impact";
             color = "red";
-            reason = "Top-position clash within the group.";
+            reason = "Rank 1 vs Rank 2 within the group.";
           } else if (Math.abs((h.pts || 0) - (a.pts || 0)) <= 1 && ((h.mp || 0) > 0 || (a.mp || 0) > 0)) {
             priority = 4;
             label = "Tight Group";
             color = "yellow";
-            reason = "Small points gap may affect qualification position.";
+            reason = "Small points gap between both teams.";
           } else if ((h.rank <= 2 && (a.pts || 0) === 0) || (a.rank <= 2 && (h.pts || 0) === 0)) {
             priority = 3;
-            label = "Recovery Risk";
+            label = "Recovery Watch";
             color = "yellow";
-            reason = "One side may need points to recover group position.";
+            reason = "One team still has 0 points against a top-ranked team.";
           }
 
           return {
@@ -1797,7 +1870,6 @@
 
       document.getElementById("critical-list").innerHTML = upcoming.map(item => {
         const d = getWibDate(item.game);
-        const group = getGroupNameFromGame(item.game);
 
         return `
           <div class="mini-card">
@@ -1807,7 +1879,7 @@
             </div>
             <div class="mini-card-sub">
               ${escapeHtml(item.reason)}<br>
-              ${escapeHtml(group ? displayGroup(group) : normalizeStage(item.game))} · ${escapeHtml(formatWibDateTime(d))}
+              ${escapeHtml(getMatchCategoryLabel(item.game))} · ${escapeHtml(formatWibDateTime(d))}
             </div>
           </div>
         `;
@@ -1843,7 +1915,7 @@
 
       document.getElementById("matches-container").innerHTML = Object.values(grouped).map(section => {
         return `
-          <div class="day-header">Group Stage · ${escapeHtml(getRelativeDateLabel(section.date))}</div>
+          <div class="day-header">${escapeHtml(getSectionTitle(section.games, section.date))}</div>
           <div class="match-grid">
             ${section.games.map(game => {
               const home = getTeam(game, "home");
@@ -1856,7 +1928,7 @@
               return `
                 <div class="match-card">
                   <div>
-                    <div class="group-label">${escapeHtml(displayGroup(getGroupNameFromGame(game)))}</div>
+                    <div class="group-label">${escapeHtml(getMatchCategoryLabel(game))}</div>
 
                     <div class="team-row">
                       <img class="flag" src="${escapeHtml(home.flag)}" alt="" onerror="this.style.visibility='hidden'">
