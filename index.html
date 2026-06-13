@@ -1044,9 +1044,7 @@
       STAGE_NAMES.FINAL,
       STAGE_NAMES.OTHER
     ];
-    const CRITICAL_WATCHLIST_DAYS = 30;
-    const CRITICAL_WATCHLIST_LIMIT = 12;
-    
+
     const statusEl = document.getElementById("api-status");
 
     let gamesData = [];
@@ -2174,65 +2172,39 @@ function normalizeGroup(value) {
 
     function renderCriticalMatches() {
       const rankMap = getRankMap();
-      const now = getTodayWibDate();
-      const maxDate = new Date(now.getTime() + CRITICAL_WATCHLIST_DAYS * 24 * 60 * 60 * 1000);
-    
+
       const upcoming = gamesData
-        .filter(game => {
-          const d = getWibDate(game);
-          if (!d || isFinished(game)) return false;
-    
-          return d.getTime() >= now.getTime() && d.getTime() <= maxDate.getTime();
-        })
+        .filter(game => !isFinished(game) && getWibDate(game))
         .map(game => {
           const group = getGroupNameFromGame(game);
           const home = getTeam(game, "home");
           const away = getTeam(game, "away");
-    
+
           const h = rankMap[group]?.[String(home.id)] || {};
           const a = rankMap[group]?.[String(away.id)] || {};
-    
-          const hasGroupStarted = (h.mp || 0) > 0 || (a.mp || 0) > 0;
-          const stage = getMatchStage(game);
-    
+
           let priority = 1;
           let label = "Watch";
           let color = "gray";
-          let reason = "Upcoming match within the next 30 days.";
-    
-          if (stage !== STAGE_NAMES.GROUP) {
-            priority = 5;
-            label = "Knockout";
-            color = "red";
-            reason = "Knockout-stage match within the 30-day watch window.";
-          } else if (hasGroupStarted && h.rank <= 2 && a.rank <= 2) {
+          let reason = "Upcoming match in tournament schedule.";
+
+          if (h.rank <= 2 && a.rank <= 2) {
             priority = 5;
             label = "High Impact";
             color = "red";
             reason = "Rank 1 vs Rank 2 within the group.";
-          } else if (
-            hasGroupStarted &&
-            Math.abs((h.pts || 0) - (a.pts || 0)) <= 1
-          ) {
+          } else if (Math.abs((h.pts || 0) - (a.pts || 0)) <= 1 && ((h.mp || 0) > 0 || (a.mp || 0) > 0)) {
             priority = 4;
             label = "Tight Group";
             color = "yellow";
             reason = "Small points gap between both teams.";
-          } else if (
-            hasGroupStarted &&
-            ((h.rank <= 2 && (a.pts || 0) === 0) || (a.rank <= 2 && (h.pts || 0) === 0))
-          ) {
+          } else if ((h.rank <= 2 && (a.pts || 0) === 0) || (a.rank <= 2 && (h.pts || 0) === 0)) {
             priority = 3;
             label = "Recovery Watch";
             color = "yellow";
             reason = "One team still has 0 points against a top-ranked team.";
-          } else if (!hasGroupStarted && stage === STAGE_NAMES.GROUP) {
-            priority = 2;
-            label = "Group Opener";
-            color = "blue";
-            reason = "Group-stage match scheduled within the next 30 days.";
           }
-    
+
           return {
             game,
             priority,
@@ -2244,17 +2216,16 @@ function normalizeGroup(value) {
         .sort((a, b) => {
           return b.priority - a.priority || getWibDate(a.game) - getWibDate(b.game);
         })
-        .slice(0, CRITICAL_WATCHLIST_LIMIT);
-    
+        .slice(0, 5);
+
       if (!upcoming.length) {
-        document.getElementById("critical-list").innerHTML =
-          `<div class="empty-state">No critical matches found in the next 30 days.</div>`;
+        document.getElementById("critical-list").innerHTML = `<div class="empty-state">No critical upcoming matches found.</div>`;
         return;
       }
-    
+
       document.getElementById("critical-list").innerHTML = upcoming.map(item => {
         const d = getWibDate(item.game);
-    
+
         return `
           <div class="mini-card">
             <div class="mini-card-title">
@@ -2579,4 +2550,4 @@ window.onload = function () {
 };
   </script>
 </body>
-</html>
+</html>s
