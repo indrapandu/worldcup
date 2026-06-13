@@ -117,31 +117,48 @@
             renderGames(gamesArray);
         }
 
-        function renderGames(games) {
+function renderGames(games) {
             gamesContainer.innerHTML = games.map(game => {
-                // Defensive extraction: APIs change variable names often. We check multiple possibilities.
-                const home = game.homeTeam?.name || game.home_team || game.home || 'TBA';
-                const away = game.awayTeam?.name || game.away_team || game.away || 'TBA';
-                const homeScore = game.score?.home ?? game.home_score ?? '-';
-                const awayScore = game.score?.away ?? game.away_score ?? '-';
-                const group = game.group || game.stage || 'Group Stage';
-                const status = game.status || 'Scheduled';
-                
+                // Parse scores
+                const hScore = game.home_score ?? '-';
+                const aScore = game.away_score ?? '-';
+                const isFinished = game.finished === "TRUE";
+
+                // Function to clean the specific scorer format: {"Name 1'", "Name 2'"}
+                const parseScorers = (raw) => {
+                    if (!raw || raw === "null" || raw === "{}") return "";
+                    // Remove curly braces and quotes
+                    return raw.replace(/[{}"“]/g, '').split(',').join(', ');
+                };
+
+                const homeScorers = parseScorers(game.home_scorers);
+                const awayScorers = parseScorers(game.away_scorers);
+
                 return `
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col h-full">
                         <div class="flex justify-between items-center mb-4">
-                            <span class="text-xs font-bold text-slate-400 uppercase">${group}</span>
-                            <span class="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded uppercase border border-slate-200">${status}</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Group ${game.group}</span>
+                            <span class="text-[10px] font-bold px-2 py-1 ${isFinished ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-700'} rounded uppercase border border-slate-200">
+                                ${isFinished ? 'FT' : 'Upcoming'}
+                            </span>
                         </div>
-                        <div class="space-y-3">
+                        
+                        <div class="space-y-4 flex-grow">
                             <div class="flex justify-between items-center">
-                                <span class="font-semibold text-slate-800">${home}</span>
-                                <span class="font-bold text-lg">${homeScore}</span>
+                                <span class="font-semibold text-slate-900">${game.home_team_name_en}</span>
+                                <span class="font-bold text-xl ${isFinished ? 'text-slate-900' : 'text-slate-300'}">${hScore}</span>
                             </div>
-                            <div class="flex justify-between items-center">
-                                <span class="font-semibold text-slate-800">${away}</span>
-                                <span class="font-bold text-lg">${awayScore}</span>
+                            ${homeScorers ? `<div class="text-[10px] text-slate-500 italic">⚽ ${homeScorers}</div>` : ''}
+                            
+                            <div class="flex justify-between items-center border-t border-slate-50 pt-3">
+                                <span class="font-semibold text-slate-900">${game.away_team_name_en}</span>
+                                <span class="font-bold text-xl ${isFinished ? 'text-slate-900' : 'text-slate-300'}">${aScore}</span>
                             </div>
+                            ${awayScorers ? `<div class="text-[10px] text-slate-500 italic">⚽ ${awayScorers}</div>` : ''}
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                            ${game.local_date}
                         </div>
                     </div>
                 `;
