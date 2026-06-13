@@ -1,172 +1,600 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>World Cup 2026 - Live Games</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #0f172a; }
-        .loader { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Cup 2026 - Fixtures</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ffffff;
+      color: #202124;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      background: #fff;
+      border-left: 1px solid #d9d9d9;
+      border-right: 1px solid #d9d9d9;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      padding: 14px 28px;
+      border-bottom: 1px solid #d9d9d9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+    }
+
+    .topbar h1 {
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .refresh-btn {
+      border: 1px solid #d0d7de;
+      background: #f6f8fa;
+      color: #24292f;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .refresh-btn:hover {
+      background: #eef1f4;
+    }
+
+    .status-line {
+      padding: 10px 28px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 12px;
+      color: #666;
+      background: #fafafa;
+    }
+
+    .day-header {
+      padding: 14px 28px;
+      background: #f8f9fa;
+      border-top: 1px solid #d9d9d9;
+      border-bottom: 1px solid #d9d9d9;
+      font-size: 16px;
+      font-weight: 400;
+      color: #202124;
+    }
+
+    .match-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .match-card {
+      min-height: 174px;
+      padding: 22px 20px 24px 29px;
+      border-bottom: 1px solid #d9d9d9;
+      display: grid;
+      grid-template-columns: 1fr 110px;
+      column-gap: 18px;
+      position: relative;
+      background: #fff;
+    }
+
+    .match-card:nth-child(odd) {
+      border-right: 1px solid #d9d9d9;
+    }
+
+    .group-label {
+      font-size: 14px;
+      color: #6b6b6b;
+      margin-bottom: 24px;
+    }
+
+    .team-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 24px;
+      align-items: center;
+      min-height: 38px;
+      gap: 12px;
+    }
+
+    .flag {
+      width: 24px;
+      height: 18px;
+      object-fit: cover;
+      border-radius: 1px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+    }
+
+    .team-name {
+      font-size: 16px;
+      color: #202124;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .score {
+      font-size: 16px;
+      color: #202124;
+      text-align: right;
+    }
+
+    .right-panel {
+      border-left: 2px solid #d0d0d0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-left: 18px;
+      min-width: 100px;
+    }
+
+    .match-status {
+      font-size: 14px;
+      color: #202124;
+      line-height: 1.25;
+      text-align: center;
+      margin-bottom: 12px;
+      white-space: pre-line;
+    }
+
+    .match-substatus {
+      color: #666;
+    }
+
+    .video-thumb {
+      width: 88px;
+      height: 49px;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      background:
+        linear-gradient(135deg, rgba(80,180,220,.95), rgba(35,80,190,.95));
+    }
+
+    .video-thumb::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 25% 30%, rgba(255,255,255,.35), transparent 28%),
+        radial-gradient(circle at 75% 60%, rgba(255,255,255,.20), transparent 30%);
+    }
+
+    .play-badge {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,.78);
+      color: white;
+      font-size: 13px;
+      height: 22px;
+      min-width: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 0 5px;
+    }
+
+    .play-icon {
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 8px solid #fff;
+    }
+
+    .red-card {
+      display: inline-block;
+      width: 9px;
+      height: 13px;
+      background: #d93025;
+      border-radius: 2px;
+      transform: rotate(10deg);
+      margin-left: 6px;
+      vertical-align: -1px;
+    }
+
+    .empty-state {
+      padding: 28px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        border-left: none;
+        border-right: none;
+      }
+
+      .match-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .match-card {
+        border-right: none !important;
+        grid-template-columns: 1fr 96px;
+        padding: 20px 16px;
+      }
+
+      .topbar,
+      .status-line,
+      .day-header {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .team-name {
+        font-size: 15px;
+      }
+    }
+  </style>
 </head>
-<body class="p-4 md:p-8">
 
-    <div class="max-w-5xl mx-auto">
-        <div class="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
-            <h1 class="text-3xl font-bold text-slate-900">World Cup 2026 Games</h1>
-            <button onclick="fetchGames()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold text-sm transition-colors">
-                Refresh API
-            </button>
-        </div>
-
-        <div class="mb-8 bg-slate-900 rounded-lg p-4 shadow-lg text-sm font-mono">
-            <div class="text-slate-400 mb-2 font-bold uppercase tracking-wider text-xs">API Connection Monitor</div>
-            <div id="api-status" class="text-yellow-400 flex items-center gap-2">
-                <div class="w-4 h-4 border-2 border-yellow-400 rounded-full loader"></div>
-                Waiting to fetch data...
-            </div>
-            <div id="api-raw-output" class="mt-3 text-slate-300 text-xs break-words max-h-32 overflow-y-auto bg-slate-950 p-2 rounded hidden"></div>
-        </div>
-
-        <div id="games-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <h1>World Cup 2026 Games</h1>
+      <button class="refresh-btn" onclick="fetchGames()">Refresh</button>
     </div>
 
-    <script>
-        const API_URL = 'https://worldcup26.ir/get/games';
-        // A reliable proxy specifically for bypassing CORS blocks on local HTML files
-        const PROXY_URL = 'https://api.allorigins.win/get?url=';
+    <div id="api-status" class="status-line">Loading games...</div>
 
-        const statusEl = document.getElementById('api-status');
-        const rawOutputEl = document.getElementById('api-raw-output');
-        const gamesContainer = document.getElementById('games-container');
+    <div id="games-container"></div>
+  </div>
 
-        function logStatus(message, type = 'info') {
-            let color = 'text-yellow-400';
-            if (type === 'success') color = 'text-green-400';
-            if (type === 'error') color = 'text-red-400';
-            
-            statusEl.className = `${color} flex items-center gap-2`;
-            statusEl.innerHTML = type === 'info' 
-                ? `<div class="w-4 h-4 border-2 border-yellow-400 rounded-full loader"></div> ${message}`
-                : `<div>${type === 'success' ? '✓' : '✗'}</div> ${message}`;
+  <script>
+    const API_URL = 'https://worldcup26.ir/get/games';
+    const PROXY_URL = 'https://api.allorigins.win/get?url=';
+
+    const statusEl = document.getElementById('api-status');
+    const gamesContainer = document.getElementById('games-container');
+
+    const FLAG_CODES = {
+      "Argentina": "ar",
+      "Australia": "au",
+      "Belgium": "be",
+      "Brazil": "br",
+      "Bosnia and Herzegovina": "ba",
+      "Canada": "ca",
+      "Czechia": "cz",
+      "Curacao": "cw",
+      "Curaçao": "cw",
+      "Denmark": "dk",
+      "England": "gb-eng",
+      "France": "fr",
+      "Germany": "de",
+      "Haiti": "ht",
+      "Italy": "it",
+      "Japan": "jp",
+      "Mexico": "mx",
+      "Morocco": "ma",
+      "Netherlands": "nl",
+      "Paraguay": "py",
+      "Portugal": "pt",
+      "Qatar": "qa",
+      "Scotland": "gb-sct",
+      "South Africa": "za",
+      "South Korea": "kr",
+      "Spain": "es",
+      "Switzerland": "ch",
+      "Türkiye": "tr",
+      "Turkey": "tr",
+      "USA": "us",
+      "United States": "us"
+    };
+
+    function setStatus(message, type = "info") {
+      const color = type === "error" ? "#d93025" : type === "success" ? "#188038" : "#666";
+      statusEl.style.color = color;
+      statusEl.textContent = message;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getTeamName(game, side) {
+      return (
+        game[`${side}_team_name_en`] ||
+        game[`${side}_team`] ||
+        game[`${side}_name`] ||
+        "-"
+      );
+    }
+
+    function getFlagUrl(teamName, game, side) {
+      const apiFlag =
+        game[`${side}_flag`] ||
+        game[`${side}_team_flag`] ||
+        game[`${side}_flag_url`];
+
+      if (apiFlag && String(apiFlag).startsWith("http")) return apiFlag;
+
+      const code = FLAG_CODES[teamName];
+      if (!code) {
+        return `https://placehold.co/32x24/ffffff/999999?text=${encodeURIComponent(teamName.slice(0, 2).toUpperCase())}`;
+      }
+
+      return `https://flagcdn.com/w40/${code}.png`;
+    }
+
+    function parseGameDate(game) {
+      const raw =
+        game.local_date ||
+        game.date ||
+        game.datetime ||
+        game.match_date ||
+        game.start_time ||
+        "";
+
+      if (!raw) return null;
+
+      const cleaned = String(raw)
+        .replace(" ", "T")
+        .replace(/\.\d+/, "");
+
+      const d = new Date(cleaned);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function dateKey(date) {
+      if (!date) return "unknown";
+      return date.toISOString().slice(0, 10);
+    }
+
+    function startOfDay(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function dayDiff(dateA, dateB) {
+      const a = startOfDay(dateA);
+      const b = startOfDay(dateB);
+      return Math.round((a - b) / 86400000);
+    }
+
+    function formatDateHeader(date) {
+      if (!date) return "Group Stage";
+
+      const today = new Date();
+      const diff = dayDiff(date, today);
+
+      if (diff === -1) return "Group Stage · Yesterday";
+      if (diff === 0) return "Group Stage · Today";
+      if (diff === 1) return "Group Stage · Tomorrow";
+
+      return "Group Stage · " + date.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short"
+      });
+    }
+
+    function formatMatchTime(date) {
+      if (!date) return "";
+      return date.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
+    }
+
+    function getStatusBlock(game, date) {
+      const finished =
+        game.finished === true ||
+        game.finished === "TRUE" ||
+        game.finished === "true" ||
+        game.status === "FT";
+
+      if (finished) {
+        const diff = date ? dayDiff(date, new Date()) : null;
+        const label =
+          diff === -1 ? "Yesterday" :
+          diff === 0 ? "Today" :
+          "FT";
+
+        return `FT\n<span class="match-substatus">${label}</span>`;
+      }
+
+      const diff = date ? dayDiff(date, new Date()) : null;
+      const dayLabel =
+        diff === 1 ? "Tomorrow" :
+        diff === 0 ? "Today" :
+        date ? date.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" }) :
+        "Upcoming";
+
+      const timeLabel = formatMatchTime(date);
+      return `${dayLabel}${timeLabel ? "\n" + timeLabel : ""}`;
+    }
+
+    function parseRedCards(raw) {
+      if (!raw || raw === "null" || raw === "{}") return [];
+      return String(raw).replace(/[{}"]/g, "").split(",").map(x => x.trim()).filter(Boolean);
+    }
+
+    function hasRedCardForTeam(game, side) {
+      const raw =
+        game[`${side}_red_cards`] ||
+        game[`${side}_redcards`] ||
+        game[`${side}_red_card`] ||
+        "";
+
+      return parseRedCards(raw).length > 0;
+    }
+
+    function getScore(game, side) {
+      const value =
+        game[`${side}_score`] ??
+        game[`${side}_goals`] ??
+        "";
+
+      return value === null || value === undefined || value === "" ? "" : value;
+    }
+
+    function getVideoDuration(game) {
+      return game.video_duration || game.highlight_duration || game.duration || "0:31";
+    }
+
+    function getThumbnail(game) {
+      return game.thumbnail || game.video_thumbnail || game.highlight_thumbnail || "";
+    }
+
+    function getGroupName(game) {
+      const group = game.group || game.group_name || "";
+      if (!group) return "Group";
+      return String(group).toLowerCase().includes("group") ? group : `Group ${group}`;
+    }
+
+    async function fetchGames() {
+      setStatus("Loading games...");
+      gamesContainer.innerHTML = "";
+
+      let jsonData = null;
+
+      try {
+        const response = await fetch(API_URL);
+        const text = await response.text();
+        jsonData = JSON.parse(text);
+        setStatus("Updated from API.", "success");
+      } catch (directError) {
+        try {
+          const proxyResponse = await fetch(PROXY_URL + encodeURIComponent(API_URL));
+          const proxyJson = await proxyResponse.json();
+          jsonData = JSON.parse(proxyJson.contents);
+          setStatus("Updated from API via proxy.", "success");
+        } catch (proxyError) {
+          setStatus("Failed to load API data.", "error");
+          gamesContainer.innerHTML = `<div class="empty-state">Unable to fetch games. Please check the API or CORS proxy.</div>`;
+          return;
+        }
+      }
+
+      const gamesArray = Array.isArray(jsonData)
+        ? jsonData
+        : (jsonData.data || jsonData.games || []);
+
+      if (!gamesArray.length) {
+        gamesContainer.innerHTML = `<div class="empty-state">No games found.</div>`;
+        return;
+      }
+
+      renderGames(gamesArray);
+    }
+
+    function groupGamesByDate(games) {
+      const sortedGames = [...games].sort((a, b) => {
+        const da = parseGameDate(a);
+        const db = parseGameDate(b);
+        return (da?.getTime() || 0) - (db?.getTime() || 0);
+      });
+
+      return sortedGames.reduce((acc, game) => {
+        const d = parseGameDate(game);
+        const key = dateKey(d);
+
+        if (!acc[key]) {
+          acc[key] = {
+            date: d,
+            games: []
+          };
         }
 
-        function showRawResponse(text) {
-            rawOutputEl.classList.remove('hidden');
-            rawOutputEl.innerText = text.substring(0, 500) + (text.length > 500 ? '\n\n...[TRUNCATED]' : '');
-        }
+        acc[key].games.push(game);
+        return acc;
+      }, {});
+    }
 
-        async function fetchGames() {
-            logStatus('Attempting direct connection to ' + API_URL + '...');
-            gamesContainer.innerHTML = '';
-            rawOutputEl.classList.add('hidden');
-            rawOutputEl.innerText = '';
+    function renderGames(games) {
+      const grouped = groupGamesByDate(games);
 
-            let rawText = '';
-            let jsonData = null;
+      gamesContainer.innerHTML = Object.values(grouped).map(section => {
+        return `
+          <section>
+            <div class="day-header">${formatDateHeader(section.date)}</div>
+            <div class="match-grid">
+              ${section.games.map(renderMatchCard).join("")}
+            </div>
+          </section>
+        `;
+      }).join("");
+    }
 
-            // STEP 1: Try Direct Connection
-            try {
-                const response = await fetch(API_URL);
-                rawText = await response.text(); // Read as text first to see exactly what the server sends
-                jsonData = JSON.parse(rawText);
-                logStatus('Direct connection successful!', 'success');
-            } catch (directError) {
-                logStatus('Direct connection failed (Likely CORS). Routing through proxy...', 'info');
-                
-                // STEP 2: Try Proxy Connection
-                try {
-                    const proxyResponse = await fetch(PROXY_URL + encodeURIComponent(API_URL));
-                    const proxyJson = await proxyResponse.json();
-                    
-                    // allorigins returns the actual API response inside a 'contents' string
-                    rawText = proxyJson.contents; 
-                    
-                    if (!rawText) {
-                        throw new Error("Proxy received an empty response from the server.");
-                    }
+    function renderMatchCard(game) {
+      const date = parseGameDate(game);
 
-                    jsonData = JSON.parse(rawText);
-                    logStatus('Proxy connection successful!', 'success');
+      const homeName = getTeamName(game, "home");
+      const awayName = getTeamName(game, "away");
 
-                } catch (proxyError) {
-                    logStatus('API Failure. See raw output below.', 'error');
-                    if (rawText) {
-                        showRawResponse("SERVER RETURNED THIS NON-JSON RESPONSE:\n\n" + rawText);
-                    } else {
-                        showRawResponse("NETWORK ERROR:\n\n" + proxyError.message);
-                    }
-                    return; // Stop execution
-                }
-            }
+      const homeScore = getScore(game, "home");
+      const awayScore = getScore(game, "away");
 
-            // STEP 3: Ensure data is an array and render
-            showRawResponse("SUCCESSFUL PAYLOAD:\n\n" + JSON.stringify(jsonData, null, 2));
-            
-            // Extract the array depending on how the API wraps it (e.g., { data: [...] } or just [...])
-            const gamesArray = Array.isArray(jsonData) ? jsonData : (jsonData.data || jsonData.games || []);
+      const homeFlag = getFlagUrl(homeName, game, "home");
+      const awayFlag = getFlagUrl(awayName, game, "away");
 
-            if (gamesArray.length === 0) {
-                gamesContainer.innerHTML = '<div class="col-span-full text-slate-500">API connected, but returned 0 games.</div>';
-                return;
-            }
+      const thumb = getThumbnail(game);
+      const duration = getVideoDuration(game);
 
-            renderGames(gamesArray);
-        }
+      return `
+        <div class="match-card">
+          <div>
+            <div class="group-label">${escapeHtml(getGroupName(game))}</div>
 
-        function renderGames(games) {
-            gamesContainer.innerHTML = games.map(game => {
-                // Parse scores
-                const hScore = game.home_score ?? '-';
-                const aScore = game.away_score ?? '-';
-                const isFinished = game.finished === "TRUE";
+            <div class="team-row">
+              <img class="flag" src="${homeFlag}" alt="${escapeHtml(homeName)} flag">
+              <div class="team-name">
+                ${escapeHtml(homeName)}
+                ${hasRedCardForTeam(game, "home") ? `<span class="red-card"></span>` : ""}
+              </div>
+              <div class="score">${escapeHtml(homeScore)}</div>
+            </div>
 
-                // Function to clean the specific scorer format: {"Name 1'", "Name 2'"}
-                const parseScorers = (raw) => {
-                    if (!raw || raw === "null" || raw === "{}") return "";
-                    // Remove curly braces and quotes
-                    return raw.replace(/[{}"“]/g, '').split(',').join(', ');
-                };
+            <div class="team-row">
+              <img class="flag" src="${awayFlag}" alt="${escapeHtml(awayName)} flag">
+              <div class="team-name">
+                ${escapeHtml(awayName)}
+                ${hasRedCardForTeam(game, "away") ? `<span class="red-card"></span>` : ""}
+              </div>
+              <div class="score">${escapeHtml(awayScore)}</div>
+            </div>
+          </div>
 
-                const homeScorers = parseScorers(game.home_scorers);
-                const awayScorers = parseScorers(game.away_scorers);
+          <div class="right-panel">
+            <div class="match-status">${getStatusBlock(game, date)}</div>
 
-                return `
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col h-full">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Group ${game.group}</span>
-                            <span class="text-[10px] font-bold px-2 py-1 ${isFinished ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-700'} rounded uppercase border border-slate-200">
-                                ${isFinished ? 'FT' : 'Upcoming'}
-                            </span>
-                        </div>
-                        
-                        <div class="space-y-4 flex-grow">
-                            <div class="flex justify-between items-center">
-                                <span class="font-semibold text-slate-900">${game.home_team_name_en}</span>
-                                <span class="font-bold text-xl ${isFinished ? 'text-slate-900' : 'text-slate-300'}">${hScore}</span>
-                            </div>
-                            ${homeScorers ? `<div class="text-[10px] text-slate-500 italic">⚽ ${homeScorers}</div>` : ''}
-                            
-                            <div class="flex justify-between items-center border-t border-slate-50 pt-3">
-                                <span class="font-semibold text-slate-900">${game.away_team_name_en}</span>
-                                <span class="font-bold text-xl ${isFinished ? 'text-slate-900' : 'text-slate-300'}">${aScore}</span>
-                            </div>
-                            ${awayScorers ? `<div class="text-[10px] text-slate-500 italic">⚽ ${awayScorers}</div>` : ''}
-                        </div>
+            <div 
+              class="video-thumb" 
+              style="${thumb ? `background-image:url('${thumb}'); background-size:cover; background-position:center;` : ""}"
+            >
+              <div class="play-badge">
+                <span class="play-icon"></span>
+                <span>${escapeHtml(duration)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
-                        <div class="mt-6 pt-4 border-t border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                            ${game.local_date}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Run immediately
-        window.onload = fetchGames;
-    </script>
+    window.onload = fetchGames;
+  </script>
 </body>
 </html>
