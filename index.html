@@ -590,7 +590,34 @@
       border-radius: 999px;
       background: var(--blue);
     }
+    
+    .site-footer {
+      border-top: 1px solid var(--line);
+      background: #fff;
+      padding: 18px 24px 24px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      display: grid;
+      gap: 5px;
+    }
 
+    .site-footer a {
+      color: var(--text);
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(17, 24, 39, 0.22);
+    }
+
+    .site-footer a:hover {
+      border-bottom-color: var(--text);
+    }
+
+    .site-footer .disclaimer {
+      margin-top: 3px;
+      color: #9ca3af;
+      font-size: 11px;
+    }
     @media (max-width: 980px) {
       .kpi-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -813,6 +840,25 @@
         <div id="venue-container" class="venue-grid"></div>
       </section>
     </main>
+    <footer class="site-footer">
+      <div>
+        Created by 
+        <a href="https://www.linkedin.com/in/indrapandu" target="_blank" rel="noopener noreferrer">
+          Indra Pandu Prasetyo
+        </a>
+      </div>
+
+      <div>
+        Match data/API powered by 
+        <a href="https://github.com/rezarahiminia/worldcup2026" target="_blank" rel="noopener noreferrer">
+          rezarahiminia/worldcup2026
+        </a>
+      </div>
+
+      <div class="disclaimer">
+        Not affiliated with, endorsed by, or sponsored by FIFA. Match information is for reference only.
+      </div>
+    </footer>
   </div>
 
   <script>
