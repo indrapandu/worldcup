@@ -840,8 +840,8 @@
       STAGE_NAMES.QF,
       STAGE_NAMES.SF,
       STAGE_NAMES.THIRD,
-      STAGE_NAMES.OTHER,
-      STAGE_NAMES.FINAL
+      STAGE_NAMES.FINAL,
+      STAGE_NAMES.OTHER
     ];
 
     const statusEl = document.getElementById("api-status");
@@ -1129,47 +1129,50 @@ function normalizeGroup(value) {
       teamsByName = {};
       teamOrderById = {};
       teamOrderByName = {};
-    
+
       teams.forEach((team, index) => {
+        const sortOrder = index + 1;
+        team.__sort_order = sortOrder;
+
         const id = team.id ?? team._id ?? team.team_id;
-    
+
         if (id !== undefined && id !== null) {
           teamsById[String(id)] = team;
-          teamOrderById[String(id)] = index;
+          teamOrderById[String(id)] = sortOrder;
         }
-    
+
         const names = [
           team.name_en,
           team.name,
           team.country,
           team.fifa_code
         ];
-    
+
         names.forEach(name => {
           if (name) {
             const key = String(name).toLowerCase().trim();
             teamsByName[key] = team;
-            teamOrderByName[key] = index;
+            teamOrderByName[key] = sortOrder;
           }
         });
       });
     }
     
   function getTeamJsonOrder(teamId, teamName) {
-    const idKey = String(teamId ?? "");
-  
-    if (idKey && teamOrderById[idKey] !== undefined) {
-      return teamOrderById[idKey];
+      const idKey = String(teamId ?? "");
+
+      if (idKey && teamOrderById[idKey] !== undefined) {
+        return teamOrderById[idKey];
+      }
+
+      const nameKey = String(teamName ?? "").toLowerCase().trim();
+
+      if (nameKey && teamOrderByName[nameKey] !== undefined) {
+        return teamOrderByName[nameKey];
+      }
+
+      return 9999;
     }
-  
-    const nameKey = String(teamName ?? "").toLowerCase().trim();
-  
-    if (nameKey && teamOrderByName[nameKey] !== undefined) {
-      return teamOrderByName[nameKey];
-    }
-  
-    return 9999;
-  }
     
     function getTeamById(teamId) {
       const team = teamsById[String(teamId)] || {};
@@ -1546,7 +1549,7 @@ function normalizeGroup(value) {
       }, 0);
     }
 
-    function standingRowFromApi(row, groupName) {
+    function standingRowFromApi(row, groupName, sortOrder) {
       const teamId =
         row.team_id ??
         row.teamId ??
@@ -1555,6 +1558,7 @@ function normalizeGroup(value) {
         row.team?._id;
 
       const team = getTeamById(teamId);
+      const rawTeam = teamsById[String(teamId)] || {};
 
       const name =
         team.name !== `Team ${teamId}` ? team.name :
@@ -1567,13 +1571,15 @@ function normalizeGroup(value) {
       const gf = toNumber(row.gf ?? row.goals_for);
       const ga = toNumber(row.ga ?? row.goals_against);
       const gd = row.gd !== undefined ? toNumber(row.gd) : gf - ga;
+      const finalSortOrder = sortOrder ?? rawTeam.__sort_order ?? getTeamJsonOrder(teamId, name);
 
       return {
         team_id: String(teamId),
         group: groupName,
         name,
         flag,
-        jsonOrder: getTeamJsonOrder(teamId, name),
+        jsonOrder: finalSortOrder,
+        sort_order: finalSortOrder,
         mp: toNumber(row.mp ?? row.played ?? row.matches_played),
         w: toNumber(row.w ?? row.win ?? row.wins),
         d: toNumber(row.d ?? row.draw ?? row.draws),
@@ -1585,15 +1591,18 @@ function normalizeGroup(value) {
       };
     }
 
-    function emptyStandingRow(teamId, groupName) {
+    function emptyStandingRow(teamId, groupName, sortOrder) {
       const team = getTeamById(teamId);
+      const rawTeam = teamsById[String(teamId)] || {};
+      const finalSortOrder = sortOrder ?? rawTeam.__sort_order ?? getTeamJsonOrder(teamId, team.name);
 
       return {
         team_id: String(teamId),
         group: groupName,
         name: team.name,
         flag: team.flag,
-        jsonOrder: getTeamJsonOrder(teamId, team.name),
+        jsonOrder: finalSortOrder,
+        sort_order: finalSortOrder,
         mp: 0,
         w: 0,
         d: 0,
@@ -1631,7 +1640,7 @@ function normalizeGroup(value) {
           Array.isArray(group.group_teams) ? group.group_teams :
           [];
 
-        rows.forEach(row => {
+        rows.forEach((row, index) => {
           const teamId =
             row.team_id ??
             row.teamId ??
@@ -1642,7 +1651,7 @@ function normalizeGroup(value) {
           if (teamId === undefined || teamId === null) return;
 
           groupMap[groupName].rowsByTeamId[String(teamId)] =
-            standingRowFromApi(row, groupName);
+            standingRowFromApi(row, groupName, index + 1);
         });
       });
 
@@ -1746,13 +1755,36 @@ function normalizeGroup(value) {
         .sort((a, b) => a.name.localeCompare(b.name))
         .map(group => {
           const rows = Object.values(group.rowsByTeamId)
-            .filter(row => row.team_id && row.name && row.name !== "-")
-            .sort((a, b) => {
+            .filter(row => row.team_id && row.name && row.name !== "-");
+
+          const groupHasPlayed = rows.some(row => {
+            return (
+              row.mp > 0 ||
+              row.w > 0 ||
+              row.d > 0 ||
+              row.l > 0 ||
+              row.gf > 0 ||
+              row.ga > 0 ||
+              row.pts > 0
+            );
+          });
+
+          rows.sort((a, b) => {
+            if (!groupHasPlayed) {
               return (
-                a.jsonOrder - b.jsonOrder ||
+                (a.sort_order || a.jsonOrder || 9999) - (b.sort_order || b.jsonOrder || 9999) ||
                 a.name.localeCompare(b.name)
               );
-            });
+            }
+
+            return (
+              b.pts - a.pts ||
+              b.gd - a.gd ||
+              b.gf - a.gf ||
+              (a.sort_order || a.jsonOrder || 9999) - (b.sort_order || b.jsonOrder || 9999) ||
+              a.name.localeCompare(b.name)
+            );
+          });
 
           return {
             name: group.name,
