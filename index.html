@@ -117,7 +117,7 @@
             renderGames(gamesArray);
         }
 
-function renderGames(games) {
+        function renderGames(games) {
             gamesContainer.innerHTML = games.map(game => {
                 // Parse scores
                 const hScore = game.home_score ?? '-';
