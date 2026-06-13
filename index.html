@@ -1,463 +1,720 @@
-<script>
-  const GAMES_API_URL = "https://worldcup26.ir/get/games";
-  const TEAMS_API_URL = "https://worldcup26.ir/get/teams";
-  const STADIUMS_API_URL = "https://worldcup26.ir/get/stadiums";
-  const PROXY_URL = "https://api.allorigins.win/get?url=";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Cup 2026 - Fixtures</title>
 
-  const statusEl = document.getElementById("api-status");
-  const gamesContainer = document.getElementById("games-container");
+  <style>
+    * { box-sizing: border-box; }
 
-  let teamsById = {};
-  let teamsByName = {};
-  let stadiumsById = {};
-
-  function showStatus(message, type = "info") {
-    const color =
-      type === "error" ? "#d93025" :
-      type === "success" ? "#188038" :
-      "#666";
-
-    statusEl.style.display = "block";
-    statusEl.style.color = color;
-    statusEl.textContent = message;
-  }
-
-  function hideStatus() {
-    statusEl.style.display = "none";
-    statusEl.textContent = "";
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  async function fetchJson(url) {
-    try {
-      const response = await fetch(url);
-      const text = await response.text();
-      return JSON.parse(text);
-    } catch (directError) {
-      const proxyResponse = await fetch(PROXY_URL + encodeURIComponent(url));
-      const proxyJson = await proxyResponse.json();
-
-      if (!proxyJson.contents) {
-        throw new Error("Empty proxy response");
-      }
-
-      return JSON.parse(proxyJson.contents);
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ffffff;
+      color: #202124;
     }
-  }
 
-  function buildTeamLookup(teams) {
-    teamsById = {};
-    teamsByName = {};
+    .page {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      background: #fff;
+      border-left: 1px solid #d9d9d9;
+      border-right: 1px solid #d9d9d9;
+      min-height: 100vh;
+    }
 
-    teams.forEach(team => {
-      if (team.id) teamsById[String(team.id)] = team;
-      if (team._id) teamsById[String(team._id)] = team;
+    .topbar {
+      padding: 12px 28px;
+      border-bottom: 1px solid #d9d9d9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+    }
 
-      if (team.name_en) {
-        teamsByName[String(team.name_en).toLowerCase()] = team;
+    .topbar h1 {
+      font-size: 17px;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .refresh-btn {
+      border: 1px solid #d0d7de;
+      background: #f6f8fa;
+      color: #24292f;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .refresh-btn:hover {
+      background: #eef1f4;
+    }
+
+    .status-line {
+      padding: 10px 28px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 12px;
+      color: #666;
+      background: #fafafa;
+    }
+
+    .status-line.hidden {
+      display: none;
+    }
+
+    .day-header {
+      padding: 14px 28px;
+      background: #f8f9fa;
+      border-top: 1px solid #d9d9d9;
+      border-bottom: 1px solid #d9d9d9;
+      font-size: 16px;
+      font-weight: 400;
+      color: #202124;
+    }
+
+    .match-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .match-card {
+      min-height: 174px;
+      padding: 22px 20px 22px 29px;
+      border-bottom: 1px solid #d9d9d9;
+      display: grid;
+      grid-template-columns: 1fr 128px;
+      column-gap: 18px;
+      background: #fff;
+    }
+
+    .match-card:nth-child(odd) {
+      border-right: 1px solid #d9d9d9;
+    }
+
+    .group-label {
+      font-size: 14px;
+      color: #6b6b6b;
+      margin-bottom: 24px;
+    }
+
+    .team-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 28px;
+      align-items: center;
+      min-height: 38px;
+      gap: 12px;
+    }
+
+    .flag {
+      width: 24px;
+      height: 18px;
+      object-fit: cover;
+      border-radius: 1px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+    }
+
+    .team-name {
+      font-size: 16px;
+      color: #202124;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .score {
+      font-size: 16px;
+      color: #202124;
+      text-align: right;
+    }
+
+    .right-panel {
+      border-left: 2px solid #d0d0d0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding-left: 18px;
+      min-width: 120px;
+    }
+
+    .status-text {
+      font-size: 14px;
+      color: #202124;
+      line-height: 1.25;
+      margin-bottom: 5px;
+    }
+
+    .date-text {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .time-box {
+      min-width: 86px;
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      padding: 7px 8px;
+      background: #fafafa;
+      margin-bottom: 6px;
+    }
+
+    .time-label {
+      font-size: 11px;
+      color: #777;
+      margin-bottom: 2px;
+    }
+
+    .time-value {
+      font-size: 17px;
+      font-weight: 600;
+      color: #202124;
+      letter-spacing: 0.2px;
+    }
+
+    .small-note {
+      font-size: 10px;
+      color: #777;
+      line-height: 1.25;
+      max-width: 120px;
+    }
+
+    .live-badge {
+      display: inline-block;
+      background: #d93025;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+
+    .red-card {
+      display: inline-block;
+      width: 9px;
+      height: 13px;
+      background: #d93025;
+      border-radius: 2px;
+      transform: rotate(10deg);
+      margin-left: 6px;
+      vertical-align: -1px;
+    }
+
+    .empty-state {
+      padding: 28px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        border-left: none;
+        border-right: none;
       }
 
-      if (team.fifa_code) {
-        teamsByName[String(team.fifa_code).toLowerCase()] = team;
+      .match-grid {
+        grid-template-columns: 1fr;
       }
-    });
-  }
 
-  function buildStadiumLookup(stadiums) {
-    stadiumsById = {};
+      .match-card {
+        border-right: none !important;
+        grid-template-columns: 1fr 118px;
+        padding: 20px 16px;
+      }
 
-    stadiums.forEach(stadium => {
-      if (stadium.id) stadiumsById[String(stadium.id)] = stadium;
-      if (stadium._id) stadiumsById[String(stadium._id)] = stadium;
-    });
-  }
+      .topbar,
+      .status-line,
+      .day-header {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
 
-  function normalizeDisplayName(name) {
-    const map = {
-      "United States": "USA",
-      "Czech Republic": "Czechia",
-      "Turkey": "Türkiye",
-      "Turkiye": "Türkiye"
+      .team-name {
+        font-size: 15px;
+      }
+
+      .right-panel {
+        padding-left: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="topbar">
+      <h1>World Cup 2026 Games</h1>
+      <button class="refresh-btn" onclick="fetchData()">Refresh</button>
+    </div>
+
+    <div id="api-status" class="status-line">Loading games...</div>
+    <div id="games-container"></div>
+  </div>
+
+  <script>
+    const GAMES_API_URL = "https://worldcup26.ir/get/games";
+    const TEAMS_API_URL = "https://worldcup26.ir/get/teams";
+    const PROXY_URL = "https://api.allorigins.win/get?url=";
+
+    const statusEl = document.getElementById("api-status");
+    const gamesContainer = document.getElementById("games-container");
+
+    let teamsById = {};
+    let teamsByName = {};
+
+    const STADIUMS = {
+      "1":  { name: "Estadio Azteca", city: "Mexico City", country: "Mexico", region: "Central", offsetToWIB: 13 },
+      "2":  { name: "Estadio Akron", city: "Guadalajara", country: "Mexico", region: "Central", offsetToWIB: 13 },
+      "3":  { name: "Estadio BBVA", city: "Monterrey", country: "Mexico", region: "Central", offsetToWIB: 13 },
+
+      "4":  { name: "AT&T Stadium", city: "Dallas", country: "United States", region: "Central", offsetToWIB: 12 },
+      "5":  { name: "NRG Stadium", city: "Houston", country: "United States", region: "Central", offsetToWIB: 12 },
+      "6":  { name: "Arrowhead Stadium", city: "Kansas City", country: "United States", region: "Central", offsetToWIB: 12 },
+
+      "7":  { name: "Mercedes-Benz Stadium", city: "Atlanta", country: "United States", region: "Eastern", offsetToWIB: 11 },
+      "8":  { name: "Hard Rock Stadium", city: "Miami", country: "United States", region: "Eastern", offsetToWIB: 11 },
+      "9":  { name: "Gillette Stadium", city: "Boston", country: "United States", region: "Eastern", offsetToWIB: 11 },
+      "10": { name: "Lincoln Financial Field", city: "Philadelphia", country: "United States", region: "Eastern", offsetToWIB: 11 },
+      "11": { name: "MetLife Stadium", city: "New York/New Jersey", country: "United States", region: "Eastern", offsetToWIB: 11 },
+      "12": { name: "BMO Field", city: "Toronto", country: "Canada", region: "Eastern", offsetToWIB: 11 },
+
+      "13": { name: "BC Place", city: "Vancouver", country: "Canada", region: "Western", offsetToWIB: 14 },
+      "14": { name: "Lumen Field", city: "Seattle", country: "United States", region: "Western", offsetToWIB: 14 },
+      "15": { name: "Levi's Stadium", city: "San Francisco Bay Area", country: "United States", region: "Western", offsetToWIB: 14 },
+      "16": { name: "SoFi Stadium", city: "Los Angeles", country: "United States", region: "Western", offsetToWIB: 14 }
     };
 
-    return map[name] || name;
-  }
-
-  function getTeam(game, side) {
-    const teamId = game[`${side}_team_id`];
-
-    const apiName =
-      game[`${side}_team_name_en`] ||
-      game[`${side}_team`] ||
-      game[`${side}_name`] ||
-      "";
-
-    const team =
-      teamsById[String(teamId)] ||
-      teamsByName[String(apiName).toLowerCase()] ||
-      {};
-
-    const name = normalizeDisplayName(team.name_en || apiName || "-");
-
-    return {
-      id: team.id || teamId,
-      name,
-      flag: team.flag || game[`${side}_flag`] || "",
-      group: team.groups || game.group || "",
-      fifaCode: team.fifa_code || ""
-    };
-  }
-
-  function getStadium(game) {
-    return stadiumsById[String(game.stadium_id)] || {};
-  }
-
-  function getOffsetHoursToWIB(stadium) {
-    const country = String(stadium.country_en || "").toLowerCase();
-    const region = String(stadium.region || "").toLowerCase();
-
-    // June/July 2026 tournament assumption:
-    // Eastern US/Canada = UTC-4, WIB = UTC+7 => +11
-    // Central US = UTC-5, WIB = UTC+7 => +12
-    // Central Mexico = UTC-6, WIB = UTC+7 => +13
-    // Western US/Canada = UTC-7, WIB = UTC+7 => +14
-
-    if (region === "eastern") return 11;
-
-    if (region === "central") {
-      if (country === "mexico") return 13;
-      return 12;
+    function showStatus(message, type = "info") {
+      statusEl.classList.remove("hidden");
+      statusEl.style.color = type === "error" ? "#d93025" : "#666";
+      statusEl.textContent = message;
     }
 
-    if (region === "western") return 14;
-
-    // Fallback only if stadium data is missing
-    return 11;
-  }
-
-  function parseVenueLocalDate(raw) {
-    if (!raw) return null;
-
-    const value = String(raw).trim();
-
-    // API format example: 06/11/2026 13:00
-    const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
-
-    if (match) {
-      const month = Number(match[1]) - 1;
-      const day = Number(match[2]);
-      const year = Number(match[3]);
-      const hour = Number(match[4]);
-      const minute = Number(match[5]);
-
-      return new Date(year, month, day, hour, minute);
+    function hideStatus() {
+      statusEl.classList.add("hidden");
+      statusEl.textContent = "";
     }
 
-    const fallback = new Date(value.replace(" ", "T"));
-    return isNaN(fallback.getTime()) ? null : fallback;
-  }
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-  function convertVenueTimeToIndonesia(game) {
-    const venueDate = parseVenueLocalDate(
-      game.local_date ||
-      game.date ||
-      game.datetime ||
-      game.match_date ||
-      game.start_time
-    );
+    async function fetchJson(url) {
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
 
-    if (!venueDate) return null;
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
 
-    const stadium = getStadium(game);
-    const offsetHours = getOffsetHoursToWIB(stadium);
+        return JSON.parse(text);
+      } catch (directError) {
+        const proxyResponse = await fetch(PROXY_URL + encodeURIComponent(url));
+        const proxyJson = await proxyResponse.json();
 
-    const indonesiaDate = new Date(venueDate);
-    indonesiaDate.setHours(indonesiaDate.getHours() + offsetHours);
+        if (!proxyJson.contents) {
+          throw new Error("Proxy returned empty response");
+        }
 
-    return indonesiaDate;
-  }
+        return JSON.parse(proxyJson.contents);
+      }
+    }
 
-  function getGameDate(game) {
-    return convertVenueTimeToIndonesia(game);
-  }
+    function extractArray(json, key) {
+      if (Array.isArray(json)) return json;
+      if (Array.isArray(json[key])) return json[key];
+      if (Array.isArray(json.data)) return json.data;
+      return [];
+    }
 
-  function startOfDay(date) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
+    function buildTeamLookup(teams) {
+      teamsById = {};
+      teamsByName = {};
 
-  function dayDiff(dateA, dateB) {
-    const a = startOfDay(dateA);
-    const b = startOfDay(dateB);
-    return Math.round((a - b) / 86400000);
-  }
+      teams.forEach(team => {
+        if (team.id) teamsById[String(team.id)] = team;
+        if (team._id) teamsById[String(team._id)] = team;
 
-  function dateKey(date) {
-    if (!date) return "unknown";
+        if (team.name_en) {
+          teamsByName[String(team.name_en).toLowerCase()] = team;
+        }
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+        if (team.fifa_code) {
+          teamsByName[String(team.fifa_code).toLowerCase()] = team;
+        }
+      });
+    }
 
-    return `${year}-${month}-${day}`;
-  }
+    function normalizeDisplayName(name) {
+      const map = {
+        "United States": "USA",
+        "Czech Republic": "Czechia",
+        "Turkey": "Türkiye",
+        "Turkiye": "Türkiye"
+      };
 
-  function getRelativeDateLabel(date) {
-    if (!date) return "";
+      return map[name] || name;
+    }
 
-    const diff = dayDiff(date, new Date());
+    function getTeam(game, side) {
+      const teamId = game[`${side}_team_id`];
 
-    if (diff === -1) return "Yesterday";
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Tomorrow";
+      const apiName =
+        game[`${side}_team_name_en`] ||
+        game[`${side}_team`] ||
+        game[`${side}_name`] ||
+        "";
 
-    return date.toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short"
-    });
-  }
+      const team =
+        teamsById[String(teamId)] ||
+        teamsByName[String(apiName).toLowerCase()] ||
+        {};
 
-  function formatDateHeader(date) {
-    if (!date) return "Group Stage";
-    return "Group Stage · " + getRelativeDateLabel(date);
-  }
+      return {
+        id: team.id || teamId,
+        name: normalizeDisplayName(team.name_en || apiName || "-"),
+        flag: team.flag || game[`${side}_flag`] || "",
+        group: team.groups || game.group || ""
+      };
+    }
 
-  function formatMatchTime(date) {
-    if (!date) return "-";
+    function getStadium(game) {
+      return STADIUMS[String(game.stadium_id)] || {
+        name: "",
+        city: "",
+        country: "",
+        region: "",
+        offsetToWIB: 11
+      };
+    }
 
-    return date.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false
-    });
-  }
+    function parseVenueLocalDate(raw) {
+      if (!raw) return null;
 
-  function isFinished(game) {
-    return (
-      game.finished === true ||
-      game.finished === "TRUE" ||
-      game.finished === "true" ||
-      game.status === "FT" ||
-      game.time_elapsed === "finished"
-    );
-  }
+      const value = String(raw).trim();
 
-  function isLive(game) {
-    const elapsed = String(game.time_elapsed || "").toLowerCase();
+      // API format: MM/DD/YYYY HH:mm
+      const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
 
-    return (
-      !isFinished(game) &&
-      elapsed &&
-      elapsed !== "notstarted" &&
-      elapsed !== "not started" &&
-      elapsed !== "scheduled"
-    );
-  }
+      if (!match) return null;
 
-  function getScore(game, side) {
-    const value =
-      game[`${side}_score`] ??
-      game[`${side}_goals`] ??
-      "";
+      return {
+        month: Number(match[1]),
+        day: Number(match[2]),
+        year: Number(match[3]),
+        hour: Number(match[4]),
+        minute: Number(match[5])
+      };
+    }
 
-    return value === null || value === undefined || value === "" ? "" : value;
-  }
+    function getWibDate(game) {
+      const stadium = getStadium(game);
 
-  function parseRedCards(raw) {
-    if (!raw || raw === "null" || raw === "{}") return [];
+      const venue = parseVenueLocalDate(
+        game.local_date ||
+        game.date ||
+        game.datetime ||
+        game.match_date ||
+        game.start_time
+      );
 
-    return String(raw)
-      .replace(/[{}"]/g, "")
-      .split(",")
-      .map(x => x.trim())
-      .filter(Boolean);
-  }
+      if (!venue) return null;
 
-  function hasRedCardForTeam(game, side) {
-    const raw =
-      game[`${side}_red_cards`] ||
-      game[`${side}_redcards`] ||
-      game[`${side}_red_card`] ||
-      "";
+      return new Date(Date.UTC(
+        venue.year,
+        venue.month - 1,
+        venue.day,
+        venue.hour + stadium.offsetToWIB,
+        venue.minute
+      ));
+    }
 
-    return parseRedCards(raw).length > 0;
-  }
+    function getTodayWibDate() {
+      return new Date(Date.now() + 7 * 60 * 60 * 1000);
+    }
 
-  function getGroupName(game, homeTeam) {
-    const group = game.group || homeTeam.group || "";
+    function dateKey(date) {
+      if (!date) return "unknown";
 
-    if (!group) return "Group";
-    return String(group).toLowerCase().includes("group") ? group : `Group ${group}`;
-  }
+      const y = date.getUTCFullYear();
+      const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const d = String(date.getUTCDate()).padStart(2, "0");
 
-  function renderTimePanel(game, date) {
-    const finished = isFinished(game);
-    const live = isLive(game);
-    const stadium = getStadium(game);
+      return `${y}-${m}-${d}`;
+    }
 
-    const dateLabel = getRelativeDateLabel(date);
-    const timeLabel = formatMatchTime(date);
-    const venueLabel = stadium.city_en || stadium.name_en || "";
+    function startOfUtcDay(date) {
+      return Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate()
+      );
+    }
 
-    if (live) {
+    function dayDiff(dateA, dateB) {
+      return Math.round((startOfUtcDay(dateA) - startOfUtcDay(dateB)) / 86400000);
+    }
+
+    function getRelativeDateLabel(date) {
+      if (!date) return "";
+
+      const diff = dayDiff(date, getTodayWibDate());
+
+      if (diff === -1) return "Yesterday";
+      if (diff === 0) return "Today";
+      if (diff === 1) return "Tomorrow";
+
+      return date.toLocaleDateString("en-GB", {
+        timeZone: "UTC",
+        weekday: "short",
+        day: "2-digit",
+        month: "short"
+      });
+    }
+
+    function formatDateHeader(date) {
+      if (!date) return "Group Stage";
+      return "Group Stage · " + getRelativeDateLabel(date);
+    }
+
+    function formatWibTime(date) {
+      if (!date) return "-";
+
+      const hh = String(date.getUTCHours()).padStart(2, "0");
+      const mm = String(date.getUTCMinutes()).padStart(2, "0");
+
+      return `${hh}:${mm}`;
+    }
+
+    function formatVenueTime(game) {
+      const venue = parseVenueLocalDate(game.local_date);
+      if (!venue) return "";
+
+      const hh = String(venue.hour).padStart(2, "0");
+      const mm = String(venue.minute).padStart(2, "0");
+
+      return `${hh}:${mm} local`;
+    }
+
+    function isFinished(game) {
+      return (
+        game.finished === true ||
+        game.finished === "TRUE" ||
+        game.finished === "true" ||
+        String(game.time_elapsed || "").toLowerCase() === "finished" ||
+        game.status === "FT"
+      );
+    }
+
+    function isLive(game) {
+      const elapsed = String(game.time_elapsed || "").toLowerCase();
+
+      return (
+        !isFinished(game) &&
+        elapsed &&
+        elapsed !== "notstarted" &&
+        elapsed !== "not started" &&
+        elapsed !== "scheduled"
+      );
+    }
+
+    function getScore(game, side) {
+      const value =
+        game[`${side}_score`] ??
+        game[`${side}_goals`] ??
+        "";
+
+      return value === null || value === undefined || value === "" ? "" : value;
+    }
+
+    function parseRedCards(raw) {
+      if (!raw || raw === "null" || raw === "{}") return [];
+
+      return String(raw)
+        .replace(/[{}"“”]/g, "")
+        .split(",")
+        .map(x => x.trim())
+        .filter(Boolean);
+    }
+
+    function hasRedCardForTeam(game, side) {
+      const raw =
+        game[`${side}_red_cards`] ||
+        game[`${side}_redcards`] ||
+        game[`${side}_red_card`] ||
+        "";
+
+      return parseRedCards(raw).length > 0;
+    }
+
+    function getGroupName(game, homeTeam) {
+      const group = game.group || homeTeam.group || "";
+
+      if (!group) return "Group";
+      return String(group).toLowerCase().includes("group") ? group : `Group ${group}`;
+    }
+
+    function renderTimePanel(game, wibDate) {
+      const stadium = getStadium(game);
+      const finished = isFinished(game);
+      const live = isLive(game);
+
+      if (live) {
+        return `
+          <div class="right-panel">
+            <div class="live-badge">LIVE</div>
+            <div class="date-text">${escapeHtml(getRelativeDateLabel(wibDate))}</div>
+            <div class="time-box">
+              <div class="time-label">Elapsed</div>
+              <div class="time-value">${escapeHtml(game.time_elapsed)}</div>
+            </div>
+            <div class="small-note">${escapeHtml(stadium.city)}</div>
+          </div>
+        `;
+      }
+
       return `
         <div class="right-panel">
-          <div class="live-badge">LIVE</div>
-          <div class="date-text">${escapeHtml(dateLabel)}</div>
+          <div class="status-text">${finished ? "FT" : "Kick-off"}</div>
+          <div class="date-text">${escapeHtml(getRelativeDateLabel(wibDate))}</div>
           <div class="time-box">
-            <div class="time-label">Elapsed</div>
-            <div class="time-value">${escapeHtml(game.time_elapsed)}</div>
-            <div class="timezone">WIB</div>
+            <div class="time-label">WIB</div>
+            <div class="time-value">${escapeHtml(formatWibTime(wibDate))}</div>
           </div>
-          <div class="timezone">${escapeHtml(venueLabel)}</div>
+          <div class="small-note">${escapeHtml(stadium.city)}</div>
+          <div class="small-note">${escapeHtml(formatVenueTime(game))}</div>
         </div>
       `;
     }
 
-    return `
-      <div class="right-panel">
-        <div class="status-text">${finished ? "FT" : "Kick-off"}</div>
-        <div class="date-text">${escapeHtml(dateLabel)}</div>
-        <div class="time-box">
-          <div class="time-label">Waktu Indonesia</div>
-          <div class="time-value">${escapeHtml(timeLabel)}</div>
-          <div class="timezone">WIB</div>
-        </div>
-        <div class="timezone">${escapeHtml(venueLabel)}</div>
-      </div>
-    `;
-  }
+    function groupGamesByDate(games) {
+      const sortedGames = [...games].sort((a, b) => {
+        const da = getWibDate(a);
+        const db = getWibDate(b);
 
-  function groupGamesByDate(games) {
-    const sortedGames = [...games].sort((a, b) => {
-      const da = getGameDate(a);
-      const db = getGameDate(b);
+        return (da?.getTime() || 0) - (db?.getTime() || 0);
+      });
 
-      return (da?.getTime() || 0) - (db?.getTime() || 0);
-    });
+      return sortedGames.reduce((acc, game) => {
+        const date = getWibDate(game);
+        const key = dateKey(date);
 
-    return sortedGames.reduce((acc, game) => {
-      const date = getGameDate(game);
-      const key = dateKey(date);
+        if (!acc[key]) {
+          acc[key] = {
+            date,
+            games: []
+          };
+        }
 
-      if (!acc[key]) {
-        acc[key] = {
-          date,
-          games: []
-        };
-      }
+        acc[key].games.push(game);
+        return acc;
+      }, {});
+    }
 
-      acc[key].games.push(game);
-      return acc;
-    }, {});
-  }
+    function renderMatchCard(game) {
+      const wibDate = getWibDate(game);
 
-  function renderMatchCard(game) {
-    const date = getGameDate(game);
+      const homeTeam = getTeam(game, "home");
+      const awayTeam = getTeam(game, "away");
 
-    const homeTeam = getTeam(game, "home");
-    const awayTeam = getTeam(game, "away");
-
-    const homeScore = getScore(game, "home");
-    const awayScore = getScore(game, "away");
-
-    return `
-      <div class="match-card">
-        <div>
-          <div class="group-label">${escapeHtml(getGroupName(game, homeTeam))}</div>
-
-          <div class="team-row">
-            <img class="flag" src="${escapeHtml(homeTeam.flag)}" alt="${escapeHtml(homeTeam.name)} flag">
-            <div class="team-name">
-              ${escapeHtml(homeTeam.name)}
-              ${hasRedCardForTeam(game, "home") ? `<span class="red-card"></span>` : ""}
-            </div>
-            <div class="score">${escapeHtml(homeScore)}</div>
-          </div>
-
-          <div class="team-row">
-            <img class="flag" src="${escapeHtml(awayTeam.flag)}" alt="${escapeHtml(awayTeam.name)} flag">
-            <div class="team-name">
-              ${escapeHtml(awayTeam.name)}
-              ${hasRedCardForTeam(game, "away") ? `<span class="red-card"></span>` : ""}
-            </div>
-            <div class="score">${escapeHtml(awayScore)}</div>
-          </div>
-        </div>
-
-        ${renderTimePanel(game, date)}
-      </div>
-    `;
-  }
-
-  function renderGames(games) {
-    const grouped = groupGamesByDate(games);
-
-    gamesContainer.innerHTML = Object.values(grouped).map(section => {
       return `
-        <section>
-          <div class="day-header">${escapeHtml(formatDateHeader(section.date))}</div>
-          <div class="match-grid">
-            ${section.games.map(renderMatchCard).join("")}
+        <div class="match-card">
+          <div>
+            <div class="group-label">${escapeHtml(getGroupName(game, homeTeam))}</div>
+
+            <div class="team-row">
+              <img class="flag" src="${escapeHtml(homeTeam.flag)}" alt="" onerror="this.style.visibility='hidden'">
+              <div class="team-name">
+                ${escapeHtml(homeTeam.name)}
+                ${hasRedCardForTeam(game, "home") ? `<span class="red-card"></span>` : ""}
+              </div>
+              <div class="score">${escapeHtml(getScore(game, "home"))}</div>
+            </div>
+
+            <div class="team-row">
+              <img class="flag" src="${escapeHtml(awayTeam.flag)}" alt="" onerror="this.style.visibility='hidden'">
+              <div class="team-name">
+                ${escapeHtml(awayTeam.name)}
+                ${hasRedCardForTeam(game, "away") ? `<span class="red-card"></span>` : ""}
+              </div>
+              <div class="score">${escapeHtml(getScore(game, "away"))}</div>
+            </div>
           </div>
-        </section>
-      `;
-    }).join("");
-  }
 
-  async function fetchData() {
-    hideStatus();
-    gamesContainer.innerHTML = "";
-
-    try {
-      const [gamesJson, teamsJson, stadiumsJson] = await Promise.all([
-        fetchJson(GAMES_API_URL),
-        fetchJson(TEAMS_API_URL),
-        fetchJson(STADIUMS_API_URL)
-      ]);
-
-      const gamesArray = Array.isArray(gamesJson)
-        ? gamesJson
-        : gamesJson.games || gamesJson.data || [];
-
-      const teamsArray = Array.isArray(teamsJson)
-        ? teamsJson
-        : teamsJson.teams || teamsJson.data || [];
-
-      const stadiumsArray = Array.isArray(stadiumsJson)
-        ? stadiumsJson
-        : stadiumsJson.stadiums || stadiumsJson.data || [];
-
-      buildTeamLookup(teamsArray);
-      buildStadiumLookup(stadiumsArray);
-
-      if (!gamesArray.length) {
-        gamesContainer.innerHTML = `<div class="empty-state">No games found.</div>`;
-        return;
-      }
-
-      renderGames(gamesArray);
-      hideStatus();
-
-    } catch (error) {
-      console.error(error);
-      showStatus("Failed to load API data.", "error");
-
-      gamesContainer.innerHTML = `
-        <div class="empty-state">
-          Unable to fetch games, teams, or stadiums. Please check the API connection or CORS proxy.
+          ${renderTimePanel(game, wibDate)}
         </div>
       `;
     }
-  }
 
-  window.onload = fetchData;
-</script>
+    function renderGames(games) {
+      const grouped = groupGamesByDate(games);
+
+      gamesContainer.innerHTML = Object.values(grouped).map(section => {
+        return `
+          <section>
+            <div class="day-header">${escapeHtml(formatDateHeader(section.date))}</div>
+            <div class="match-grid">
+              ${section.games.map(renderMatchCard).join("")}
+            </div>
+          </section>
+        `;
+      }).join("");
+    }
+
+    async function fetchData() {
+      showStatus("Loading games...");
+
+      try {
+        const gamesJson = await fetchJson(GAMES_API_URL);
+        const gamesArray = extractArray(gamesJson, "games");
+
+        let teamsArray = [];
+
+        try {
+          const teamsJson = await fetchJson(TEAMS_API_URL);
+          teamsArray = extractArray(teamsJson, "teams");
+        } catch (teamError) {
+          console.warn("Teams API failed, using names from games only.", teamError);
+        }
+
+        buildTeamLookup(teamsArray);
+
+        if (!gamesArray.length) {
+          gamesContainer.innerHTML = `<div class="empty-state">No games found.</div>`;
+          hideStatus();
+          return;
+        }
+
+        renderGames(gamesArray);
+        hideStatus();
+
+      } catch (error) {
+        console.error(error);
+        showStatus("Failed to load games. Please check API connection or CORS proxy.", "error");
+
+        gamesContainer.innerHTML = `
+          <div class="empty-state">
+            Data tidak bisa dimuat. Coba klik Refresh, atau buka lewat local server / Apps Script, bukan langsung file local.
+          </div>
+        `;
+      }
+    }
+
+    window.onload = fetchData;
+  </script>
+</body>
+</html>
