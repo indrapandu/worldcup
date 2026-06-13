@@ -2123,7 +2123,7 @@ function normalizeGroup(value) {
         upcoming = gamesData
           .filter(game => !isFinished(game) && getWibDate(game))
           .sort((a, b) => getWibDate(a) - getWibDate(b))
-          .slice(0, 7);
+          .slice(0, 12);
       }
 
       if (!upcoming.length) {
@@ -2216,7 +2216,7 @@ function normalizeGroup(value) {
         .sort((a, b) => {
           return b.priority - a.priority || getWibDate(a.game) - getWibDate(b.game);
         })
-        .slice(0, 7);
+        .slice(0, 12);
 
       if (!upcoming.length) {
         document.getElementById("critical-list").innerHTML = `<div class="empty-state">No critical upcoming matches found.</div>`;
