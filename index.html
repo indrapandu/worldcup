@@ -2117,7 +2117,7 @@ function normalizeGroup(value) {
           return diff >= 0 && diff <= 7 * 24 * 60 * 60 * 1000;
         })
         .sort((a, b) => getWibDate(a) - getWibDate(b))
-        .slice(0, 7);
+        .slice(0, 12);
 
       if (!upcoming.length) {
         upcoming = gamesData
