@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>World Cup 2026 - Fixtures</title>
+  <title>World Cup 2026</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -52,6 +52,37 @@
 
     .refresh-btn:hover {
       background: #eef1f4;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #d9d9d9;
+      background: #fff;
+      padding: 0 28px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 13px 18px 12px;
+      font-size: 14px;
+      color: #5f6368;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab-btn.active {
+      color: #202124;
+      font-weight: 600;
+      border-bottom-color: #202124;
+    }
+
+    .tab-view {
+      display: none;
+    }
+
+    .tab-view.active {
+      display: block;
     }
 
     .status-line {
@@ -214,10 +245,113 @@
       font-size: 14px;
     }
 
+    /* TABLE TAB */
+    .tables-container {
+      background: #fff;
+    }
+
+    .standings-block {
+      padding: 22px 20px 30px;
+      border-bottom: 1px solid #d9d9d9;
+    }
+
+    .standings-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 12px;
+      color: #202124;
+    }
+
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .standings-table thead th {
+      height: 34px;
+      font-size: 16px;
+      font-weight: 400;
+      color: #666;
+      border-bottom: 1px solid #d0d0d0;
+      text-align: center;
+    }
+
+    .standings-table thead th.team-head {
+      text-align: left;
+    }
+
+    .standings-table thead th.pts-head {
+      color: #202124;
+      font-weight: 700;
+    }
+
+    .standings-table tbody td {
+      height: 61px;
+      border-bottom: 1px solid #d9d9d9;
+      font-size: 20px;
+      color: #202124;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .standings-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .rank-col {
+      width: 38px;
+    }
+
+    .team-col {
+      width: auto;
+    }
+
+    .stat-col {
+      width: 46px;
+    }
+
+    .rank-cell {
+      color: #202124;
+      font-size: 20px;
+    }
+
+    .standing-team {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .standing-flag {
+      width: 31px;
+      height: 23px;
+      object-fit: cover;
+      border-radius: 3px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+      flex: 0 0 auto;
+    }
+
+    .standing-name {
+      font-size: 20px;
+      color: #202124;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pts-cell {
+      font-weight: 700;
+    }
+
     @media (max-width: 760px) {
       .page {
         border-left: none;
         border-right: none;
+      }
+
+      .tabs {
+        padding: 0 16px;
       }
 
       .match-grid {
@@ -244,6 +378,20 @@
       .right-panel {
         padding-left: 14px;
       }
+
+      .standings-block {
+        padding: 20px 12px 28px;
+        overflow-x: auto;
+      }
+
+      .standings-title {
+        font-size: 22px;
+        margin-left: 4px;
+      }
+
+      .standings-table {
+        min-width: 690px;
+      }
     }
   </style>
 </head>
@@ -251,46 +399,68 @@
 <body>
   <div class="page">
     <div class="topbar">
-      <h1>World Cup 2026 Games</h1>
+      <h1>World Cup 2026</h1>
       <button class="refresh-btn" onclick="fetchData()">Refresh</button>
     </div>
 
-    <div id="api-status" class="status-line">Loading games...</div>
-    <div id="games-container"></div>
+    <div class="tabs">
+      <button id="matches-tab" class="tab-btn active" onclick="switchTab('matches')">Matches</button>
+      <button id="table-tab" class="tab-btn" onclick="switchTab('table')">Table</button>
+    </div>
+
+    <div id="api-status" class="status-line">Loading data...</div>
+
+    <div id="matches-view" class="tab-view active">
+      <div id="games-container"></div>
+    </div>
+
+    <div id="table-view" class="tab-view">
+      <div id="tables-container" class="tables-container"></div>
+    </div>
   </div>
 
   <script>
     const GAMES_API_URL = "https://worldcup26.ir/get/games";
     const TEAMS_API_URL = "https://worldcup26.ir/get/teams";
+    const GROUPS_API_URL = "https://worldcup26.ir/get/groups";
     const PROXY_URL = "https://api.allorigins.win/get?url=";
 
     const statusEl = document.getElementById("api-status");
     const gamesContainer = document.getElementById("games-container");
+    const tablesContainer = document.getElementById("tables-container");
 
     let teamsById = {};
     let teamsByName = {};
 
     const STADIUMS = {
-      "1":  { name: "Estadio Azteca", city: "Mexico City", country: "Mexico", region: "Central", offsetToWIB: 13 },
-      "2":  { name: "Estadio Akron", city: "Guadalajara", country: "Mexico", region: "Central", offsetToWIB: 13 },
-      "3":  { name: "Estadio BBVA", city: "Monterrey", country: "Mexico", region: "Central", offsetToWIB: 13 },
+      "1":  { name: "Estadio Azteca", city: "Mexico City", offsetToWIB: 13 },
+      "2":  { name: "Estadio Akron", city: "Guadalajara", offsetToWIB: 13 },
+      "3":  { name: "Estadio BBVA", city: "Monterrey", offsetToWIB: 13 },
 
-      "4":  { name: "AT&T Stadium", city: "Dallas", country: "United States", region: "Central", offsetToWIB: 12 },
-      "5":  { name: "NRG Stadium", city: "Houston", country: "United States", region: "Central", offsetToWIB: 12 },
-      "6":  { name: "Arrowhead Stadium", city: "Kansas City", country: "United States", region: "Central", offsetToWIB: 12 },
+      "4":  { name: "AT&T Stadium", city: "Dallas", offsetToWIB: 12 },
+      "5":  { name: "NRG Stadium", city: "Houston", offsetToWIB: 12 },
+      "6":  { name: "Arrowhead Stadium", city: "Kansas City", offsetToWIB: 12 },
 
-      "7":  { name: "Mercedes-Benz Stadium", city: "Atlanta", country: "United States", region: "Eastern", offsetToWIB: 11 },
-      "8":  { name: "Hard Rock Stadium", city: "Miami", country: "United States", region: "Eastern", offsetToWIB: 11 },
-      "9":  { name: "Gillette Stadium", city: "Boston", country: "United States", region: "Eastern", offsetToWIB: 11 },
-      "10": { name: "Lincoln Financial Field", city: "Philadelphia", country: "United States", region: "Eastern", offsetToWIB: 11 },
-      "11": { name: "MetLife Stadium", city: "New York/New Jersey", country: "United States", region: "Eastern", offsetToWIB: 11 },
-      "12": { name: "BMO Field", city: "Toronto", country: "Canada", region: "Eastern", offsetToWIB: 11 },
+      "7":  { name: "Mercedes-Benz Stadium", city: "Atlanta", offsetToWIB: 11 },
+      "8":  { name: "Hard Rock Stadium", city: "Miami", offsetToWIB: 11 },
+      "9":  { name: "Gillette Stadium", city: "Boston", offsetToWIB: 11 },
+      "10": { name: "Lincoln Financial Field", city: "Philadelphia", offsetToWIB: 11 },
+      "11": { name: "MetLife Stadium", city: "New York/New Jersey", offsetToWIB: 11 },
+      "12": { name: "BMO Field", city: "Toronto", offsetToWIB: 11 },
 
-      "13": { name: "BC Place", city: "Vancouver", country: "Canada", region: "Western", offsetToWIB: 14 },
-      "14": { name: "Lumen Field", city: "Seattle", country: "United States", region: "Western", offsetToWIB: 14 },
-      "15": { name: "Levi's Stadium", city: "San Francisco Bay Area", country: "United States", region: "Western", offsetToWIB: 14 },
-      "16": { name: "SoFi Stadium", city: "Los Angeles", country: "United States", region: "Western", offsetToWIB: 14 }
+      "13": { name: "BC Place", city: "Vancouver", offsetToWIB: 14 },
+      "14": { name: "Lumen Field", city: "Seattle", offsetToWIB: 14 },
+      "15": { name: "Levi's Stadium", city: "San Francisco Bay Area", offsetToWIB: 14 },
+      "16": { name: "SoFi Stadium", city: "Los Angeles", offsetToWIB: 14 }
     };
+
+    function switchTab(tabName) {
+      document.getElementById("matches-tab").classList.toggle("active", tabName === "matches");
+      document.getElementById("table-tab").classList.toggle("active", tabName === "table");
+
+      document.getElementById("matches-view").classList.toggle("active", tabName === "matches");
+      document.getElementById("table-view").classList.toggle("active", tabName === "table");
+    }
 
     function showStatus(message, type = "info") {
       statusEl.classList.remove("hidden");
@@ -341,6 +511,11 @@
       return [];
     }
 
+    function toNumber(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
     function buildTeamLookup(teams) {
       teamsById = {};
       teamsByName = {};
@@ -370,6 +545,17 @@
       return map[name] || name;
     }
 
+    function getTeamById(teamId) {
+      const team = teamsById[String(teamId)] || {};
+
+      return {
+        id: team.id || teamId,
+        name: normalizeDisplayName(team.name_en || `Team ${teamId}`),
+        flag: team.flag || "",
+        group: team.groups || ""
+      };
+    }
+
     function getTeam(game, side) {
       const teamId = game[`${side}_team_id`];
 
@@ -396,8 +582,6 @@
       return STADIUMS[String(game.stadium_id)] || {
         name: "",
         city: "",
-        country: "",
-        region: "",
         offsetToWIB: 11
       };
     }
@@ -675,40 +859,286 @@
       }).join("");
     }
 
+    function getGroupSortValue(groupName) {
+      const letter = String(groupName || "").trim().toUpperCase();
+      return letter.charCodeAt(0) || 999;
+    }
+
+    function emptyStandingRow(teamId, groupName) {
+      const team = getTeamById(teamId);
+
+      return {
+        team_id: String(teamId),
+        group: groupName,
+        name: team.name,
+        flag: team.flag,
+        mp: 0,
+        w: 0,
+        d: 0,
+        l: 0,
+        gf: 0,
+        ga: 0,
+        gd: 0,
+        pts: 0
+      };
+    }
+
+    function buildStandings(groups, games) {
+      const groupMap = {};
+
+      groups.forEach(group => {
+        const groupName = String(group.name || "").trim();
+
+        if (!groupName) return;
+
+        if (!groupMap[groupName]) {
+          groupMap[groupName] = {
+            name: groupName,
+            rowsByTeamId: {}
+          };
+        }
+
+        (group.teams || []).forEach(row => {
+          const teamId = String(row.team_id);
+          const team = getTeamById(teamId);
+
+          groupMap[groupName].rowsByTeamId[teamId] = {
+            team_id: teamId,
+            group: groupName,
+            name: team.name,
+            flag: team.flag,
+            mp: toNumber(row.mp),
+            w: toNumber(row.w),
+            d: toNumber(row.d),
+            l: toNumber(row.l),
+            gf: toNumber(row.gf),
+            ga: toNumber(row.ga),
+            gd: toNumber(row.gd),
+            pts: toNumber(row.pts)
+          };
+        });
+      });
+
+      // Backup kalau groups API kosong: pakai data group dari teams API.
+      Object.values(teamsById).forEach(team => {
+        const groupName = String(team.groups || "").trim();
+        if (!groupName) return;
+
+        if (!groupMap[groupName]) {
+          groupMap[groupName] = {
+            name: groupName,
+            rowsByTeamId: {}
+          };
+        }
+
+        if (!groupMap[groupName].rowsByTeamId[String(team.id)]) {
+          groupMap[groupName].rowsByTeamId[String(team.id)] = emptyStandingRow(team.id, groupName);
+        }
+      });
+
+      const groupApiHasStats = Object.values(groupMap).some(group => {
+        return Object.values(group.rowsByTeamId).some(row => {
+          return row.mp || row.w || row.d || row.l || row.gf || row.ga || row.gd || row.pts;
+        });
+      });
+
+      // Kalau group API belum update standings, hitung dari finished games.
+      if (!groupApiHasStats) {
+        Object.values(groupMap).forEach(group => {
+          Object.values(group.rowsByTeamId).forEach(row => {
+            row.mp = 0;
+            row.w = 0;
+            row.d = 0;
+            row.l = 0;
+            row.gf = 0;
+            row.ga = 0;
+            row.gd = 0;
+            row.pts = 0;
+          });
+        });
+
+        games.filter(game => String(game.type || "").toLowerCase() === "group" && isFinished(game)).forEach(game => {
+          const groupName = String(game.group || "").trim();
+          if (!groupName) return;
+
+          if (!groupMap[groupName]) {
+            groupMap[groupName] = {
+              name: groupName,
+              rowsByTeamId: {}
+            };
+          }
+
+          const homeId = String(game.home_team_id);
+          const awayId = String(game.away_team_id);
+
+          if (!groupMap[groupName].rowsByTeamId[homeId]) {
+            groupMap[groupName].rowsByTeamId[homeId] = emptyStandingRow(homeId, groupName);
+          }
+
+          if (!groupMap[groupName].rowsByTeamId[awayId]) {
+            groupMap[groupName].rowsByTeamId[awayId] = emptyStandingRow(awayId, groupName);
+          }
+
+          const home = groupMap[groupName].rowsByTeamId[homeId];
+          const away = groupMap[groupName].rowsByTeamId[awayId];
+
+          const homeScore = toNumber(game.home_score);
+          const awayScore = toNumber(game.away_score);
+
+          home.mp += 1;
+          away.mp += 1;
+
+          home.gf += homeScore;
+          home.ga += awayScore;
+          away.gf += awayScore;
+          away.ga += homeScore;
+
+          home.gd = home.gf - home.ga;
+          away.gd = away.gf - away.ga;
+
+          if (homeScore > awayScore) {
+            home.w += 1;
+            away.l += 1;
+            home.pts += 3;
+          } else if (homeScore < awayScore) {
+            away.w += 1;
+            home.l += 1;
+            away.pts += 3;
+          } else {
+            home.d += 1;
+            away.d += 1;
+            home.pts += 1;
+            away.pts += 1;
+          }
+        });
+      }
+
+      return Object.values(groupMap)
+        .sort((a, b) => getGroupSortValue(a.name) - getGroupSortValue(b.name))
+        .map(group => {
+          const rows = Object.values(group.rowsByTeamId)
+            .sort((a, b) => {
+              return (
+                b.pts - a.pts ||
+                b.gd - a.gd ||
+                b.gf - a.gf ||
+                a.name.localeCompare(b.name)
+              );
+            });
+
+          return {
+            name: group.name,
+            rows
+          };
+        });
+    }
+
+    function renderTables(groups, games) {
+      const standings = buildStandings(groups, games);
+
+      if (!standings.length) {
+        tablesContainer.innerHTML = `<div class="empty-state">No group table data found.</div>`;
+        return;
+      }
+
+      tablesContainer.innerHTML = standings.map(group => {
+        return `
+          <section class="standings-block">
+            <h2 class="standings-title">Group ${escapeHtml(group.name)}</h2>
+
+            <table class="standings-table">
+              <colgroup>
+                <col class="rank-col">
+                <col class="team-col">
+                <col class="stat-col">
+                <col class="stat-col">
+                <col class="stat-col">
+                <col class="stat-col">
+                <col class="stat-col">
+                <col class="stat-col">
+                <col class="stat-col">
+                <col class="stat-col">
+              </colgroup>
+
+              <thead>
+                <tr>
+                  <th colspan="2" class="team-head">Team</th>
+                  <th>MP</th>
+                  <th>W</th>
+                  <th>D</th>
+                  <th>L</th>
+                  <th>GF</th>
+                  <th>GA</th>
+                  <th>GD</th>
+                  <th class="pts-head">Pts</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                ${group.rows.map((row, index) => `
+                  <tr>
+                    <td class="rank-cell">${index + 1}</td>
+                    <td>
+                      <div class="standing-team">
+                        <img class="standing-flag" src="${escapeHtml(row.flag)}" alt="" onerror="this.style.visibility='hidden'">
+                        <span class="standing-name">${escapeHtml(row.name)}</span>
+                      </div>
+                    </td>
+                    <td>${row.mp}</td>
+                    <td>${row.w}</td>
+                    <td>${row.d}</td>
+                    <td>${row.l}</td>
+                    <td>${row.gf}</td>
+                    <td>${row.ga}</td>
+                    <td>${row.gd}</td>
+                    <td class="pts-cell">${row.pts}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </section>
+        `;
+      }).join("");
+    }
+
     async function fetchData() {
-      showStatus("Loading games...");
+      showStatus("Loading data...");
 
       try {
-        const gamesJson = await fetchJson(GAMES_API_URL);
+        const [gamesJson, teamsJson, groupsJson] = await Promise.all([
+          fetchJson(GAMES_API_URL),
+          fetchJson(TEAMS_API_URL),
+          fetchJson(GROUPS_API_URL)
+        ]);
+
         const gamesArray = extractArray(gamesJson, "games");
-
-        let teamsArray = [];
-
-        try {
-          const teamsJson = await fetchJson(TEAMS_API_URL);
-          teamsArray = extractArray(teamsJson, "teams");
-        } catch (teamError) {
-          console.warn("Teams API failed, using names from games only.", teamError);
-        }
+        const teamsArray = extractArray(teamsJson, "teams");
+        const groupsArray = extractArray(groupsJson, "groups");
 
         buildTeamLookup(teamsArray);
 
         if (!gamesArray.length) {
           gamesContainer.innerHTML = `<div class="empty-state">No games found.</div>`;
-          hideStatus();
-          return;
+        } else {
+          renderGames(gamesArray);
         }
 
-        renderGames(gamesArray);
+        renderTables(groupsArray, gamesArray);
         hideStatus();
 
       } catch (error) {
         console.error(error);
-        showStatus("Failed to load games. Please check API connection or CORS proxy.", "error");
+        showStatus("Failed to load data. Please check API connection or CORS proxy.", "error");
 
         gamesContainer.innerHTML = `
           <div class="empty-state">
             Data tidak bisa dimuat. Coba klik Refresh, atau buka lewat local server / Apps Script, bukan langsung file local.
+          </div>
+        `;
+
+        tablesContainer.innerHTML = `
+          <div class="empty-state">
+            Table data tidak bisa dimuat.
           </div>
         `;
       }
