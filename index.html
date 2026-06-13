@@ -851,6 +851,8 @@
     let standingsData = [];
     let teamsById = {};
     let teamsByName = {};
+    let teamOrderById = {};
+    let teamOrderByName = {};
     let stadiumsById = {};
 
     const FALLBACK_STADIUMS = {
@@ -1125,29 +1127,50 @@ function normalizeGroup(value) {
     function buildTeamLookup(teams) {
       teamsById = {};
       teamsByName = {};
-
-      teams.forEach(team => {
+      teamOrderById = {};
+      teamOrderByName = {};
+    
+      teams.forEach((team, index) => {
         const id = team.id ?? team._id ?? team.team_id;
-
+    
         if (id !== undefined && id !== null) {
           teamsById[String(id)] = team;
+          teamOrderById[String(id)] = index;
         }
-
+    
         const names = [
           team.name_en,
           team.name,
           team.country,
           team.fifa_code
         ];
-
+    
         names.forEach(name => {
           if (name) {
-            teamsByName[String(name).toLowerCase()] = team;
+            const key = String(name).toLowerCase().trim();
+            teamsByName[key] = team;
+            teamOrderByName[key] = index;
           }
         });
       });
     }
-
+    
+  function getTeamJsonOrder(teamId, teamName) {
+    const idKey = String(teamId ?? "");
+  
+    if (idKey && teamOrderById[idKey] !== undefined) {
+      return teamOrderById[idKey];
+    }
+  
+    const nameKey = String(teamName ?? "").toLowerCase().trim();
+  
+    if (nameKey && teamOrderByName[nameKey] !== undefined) {
+      return teamOrderByName[nameKey];
+    }
+  
+    return 9999;
+  }
+    
     function getTeamById(teamId) {
       const team = teamsById[String(teamId)] || {};
 
@@ -1550,6 +1573,7 @@ function normalizeGroup(value) {
         group: groupName,
         name,
         flag,
+        jsonOrder: getTeamJsonOrder(teamId, name),
         mp: toNumber(row.mp ?? row.played ?? row.matches_played),
         w: toNumber(row.w ?? row.win ?? row.wins),
         d: toNumber(row.d ?? row.draw ?? row.draws),
@@ -1569,6 +1593,7 @@ function normalizeGroup(value) {
         group: groupName,
         name: team.name,
         flag: team.flag,
+        jsonOrder: getTeamJsonOrder(teamId, team.name),
         mp: 0,
         w: 0,
         d: 0,
@@ -1724,9 +1749,7 @@ function normalizeGroup(value) {
             .filter(row => row.team_id && row.name && row.name !== "-")
             .sort((a, b) => {
               return (
-                b.pts - a.pts ||
-                b.gd - a.gd ||
-                b.gf - a.gf ||
+                a.jsonOrder - b.jsonOrder ||
                 a.name.localeCompare(b.name)
               );
             });
