@@ -1174,6 +1174,16 @@
       OTHER: "Match"
     };
 
+    const STAGE_NAME_BY_TYPE = {
+      group: STAGE_NAMES.GROUP,
+      r32: STAGE_NAMES.R32,
+      r16: STAGE_NAMES.R16,
+      qf: STAGE_NAMES.QF,
+      sf: STAGE_NAMES.SF,
+      third: STAGE_NAMES.THIRD,
+      final: STAGE_NAMES.FINAL
+    };
+
     const STAGE_ORDER = [
       STAGE_NAMES.GROUP,
       STAGE_NAMES.R32,
@@ -1181,8 +1191,8 @@
       STAGE_NAMES.QF,
       STAGE_NAMES.SF,
       STAGE_NAMES.THIRD,
-      STAGE_NAMES.OTHER,
-      STAGE_NAMES.FINAL
+      STAGE_NAMES.FINAL,
+      STAGE_NAMES.OTHER
     ];
 
     const statusEl = document.getElementById("api-status");
@@ -1337,118 +1347,24 @@ function normalizeGroup(value) {
       return g ? `Group ${g}` : "Group";
     }
 
-    function getStageCandidateText(game) {
-      const candidates = [
-        game.stage,
-        game.stage_name,
-        game.round,
-        game.round_name,
-        game.phase,
-        game.phase_name,
-        game.type,
-        game.match_type,
-        game.matchType,
-        game.category,
-        game.title,
-        game.name
-      ];
+    function normalizeStageType(value) {
+      if (value === null || value === undefined) return "";
 
-      return candidates
-        .filter(v => v !== undefined && v !== null)
-        .map(v => {
-          if (typeof v === "object") {
-            return [
-              v.name,
-              v.name_en,
-              v.title,
-              v.label,
-              v.type,
-              v.round,
-              v.stage
-            ].filter(Boolean).join(" ");
-          }
+      let raw = value;
 
-          return String(v);
-        })
-        .join(" ")
-        .trim();
+      if (typeof raw === "object") {
+        raw = raw.type || raw.name || raw.name_en || raw.label || "";
+      }
+
+      return String(raw)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
     }
 
     function getMatchStage(game) {
-      const explicitText = getStageCandidateText(game);
-      const text = explicitText.toLowerCase();
-      const compact = text.replace(/[^a-z0-9]/g, "");
-
-      if (
-        text.includes("third place") ||
-        text.includes("third-place") ||
-        text.includes("3rd place") ||
-        text.includes("bronze") ||
-        compact.includes("thirdplace") ||
-        compact.includes("3rdplace")
-      ) {
-        return STAGE_NAMES.THIRD;
-      }
-
-      if (
-        text.includes("semi") ||
-        compact.includes("semifinal") ||
-        compact.includes("semifinals")
-      ) {
-        return STAGE_NAMES.SF;
-      }
-
-      if (
-        text.includes("quarter") ||
-        compact.includes("quarterfinal") ||
-        compact.includes("quarterfinals")
-      ) {
-        return STAGE_NAMES.QF;
-      }
-
-      if (
-        text.includes("round of 32") ||
-        text.includes("round-of-32") ||
-        text.includes("last 32") ||
-        text.includes("r32") ||
-        text.includes("1/16") ||
-        compact.includes("roundof32") ||
-        compact.includes("round32") ||
-        compact.includes("last32")
-      ) {
-        return STAGE_NAMES.R32;
-      }
-
-      if (
-        text.includes("round of 16") ||
-        text.includes("round-of-16") ||
-        text.includes("last 16") ||
-        text.includes("r16") ||
-        text.includes("1/8") ||
-        compact.includes("roundof16") ||
-        compact.includes("round16") ||
-        compact.includes("last16")
-      ) {
-        return STAGE_NAMES.R16;
-      }
-
-      if (
-        text === "final" ||
-        text.includes(" final") ||
-        text.startsWith("final") ||
-        compact === "final"
-      ) {
-        return STAGE_NAMES.FINAL;
-      }
-
-      if (
-        text.includes("group") ||
-        normalizeGroup(game.group || game.group_name || game.group_letter)
-      ) {
-        return STAGE_NAMES.GROUP;
-      }
-
-      return STAGE_NAMES.OTHER;
+      const type = normalizeStageType(game?.type);
+      return STAGE_NAME_BY_TYPE[type] || STAGE_NAMES.OTHER;
     }
 
     function getMatchCategoryLabel(game) {
