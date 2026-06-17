@@ -695,6 +695,124 @@
       vertical-align: -1px;
     }
 
+    .scorer-box {
+      margin-top: 10px;
+      padding-top: 9px;
+      border-top: 1px dashed var(--line);
+      display: grid;
+      gap: 4px;
+    }
+
+    .scorer-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 11.5px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .scorer-team {
+      flex: 0 0 auto;
+      min-width: 44px;
+      color: var(--text);
+      font-weight: 750;
+    }
+
+    .scorer-empty {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--line);
+      font-size: 11.5px;
+      color: #9ca3af;
+    }
+
+    .group-matches-layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .group-match-block {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .group-match-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    .group-match-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+
+    .group-match-count {
+      margin-top: 3px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .group-match-list {
+      display: grid;
+    }
+
+    .group-match-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .group-match-row:last-child {
+      border-bottom: none;
+    }
+
+    .group-match-main {
+      min-width: 0;
+    }
+
+    .group-match-scoreline {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .group-match-scoreline span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .group-match-scoreline strong {
+      min-width: 42px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .group-match-meta {
+      margin-top: 5px;
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
     .table-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -900,7 +1018,8 @@
       .dashboard-grid,
       .two-col,
       .table-layout,
-      .venue-grid {
+      .venue-grid,
+      .group-matches-layout {
         grid-template-columns: 1fr;
       }
 
@@ -1111,6 +1230,21 @@
       .health-count {
         font-size: 10.5px;
       }
+
+      .group-match-head,
+      .group-match-row {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .group-match-row {
+        grid-template-columns: 1fr;
+      }
+
+      .group-match-scoreline {
+        grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
+        font-size: 12.5px;
+      }
     }
   </style>
 </head>
@@ -1138,6 +1272,7 @@
     <nav class="tabs">
       <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
       <button class="tab-btn" onclick="switchTab('matches')">Matches</button>
+      <button class="tab-btn" onclick="switchTab('groupMatches')">Group Matches</button>
       <button class="tab-btn" onclick="switchTab('table')">Table</button>
       <button class="tab-btn" onclick="switchTab('venues')">Venues</button>
     </nav>
@@ -1170,6 +1305,10 @@
 
       <section id="matches" class="view">
         <div id="matches-container"></div>
+      </section>
+
+      <section id="groupMatches" class="view">
+        <div id="group-matches-container" class="group-matches-layout"></div>
       </section>
 
       <section id="table" class="view">
@@ -1272,8 +1411,9 @@
       const tabIndex = {
         dashboard: 0,
         matches: 1,
-        table: 2,
-        venues: 3
+        groupMatches: 2,
+        table: 3,
+        venues: 4
       }[tabName];
 
       document.querySelectorAll(".tab-btn")[tabIndex].classList.add("active");
@@ -1769,6 +1909,129 @@ function normalizeGroup(value) {
         "";
 
       return value === null || value === undefined || value === "" ? "" : value;
+    }
+
+    function formatScorerEntry(entry) {
+      if (entry === null || entry === undefined) return "";
+
+      if (typeof entry === "string" || typeof entry === "number") {
+        return String(entry).trim();
+      }
+
+      if (typeof entry !== "object") return "";
+
+      const player =
+        entry.player_name ||
+        entry.playerName ||
+        entry.scorer_name ||
+        entry.scorerName ||
+        entry.goal_scorer ||
+        entry.goalscorer ||
+        entry.scorer ||
+        entry.player ||
+        entry.name_en ||
+        entry.name ||
+        "";
+
+      const minuteRaw =
+        entry.minute ||
+        entry.minutes ||
+        entry.time ||
+        entry.elapsed ||
+        entry.goal_minute ||
+        entry.goalMinute ||
+        "";
+
+      const minute = minuteRaw
+        ? String(minuteRaw).includes("'") || String(minuteRaw).includes("’")
+          ? String(minuteRaw).trim()
+          : `${String(minuteRaw).trim()}'`
+        : "";
+
+      const tags = [];
+      if (entry.penalty || entry.is_penalty || entry.type === "penalty") tags.push("pen.");
+      if (entry.own_goal || entry.ownGoal || entry.type === "own_goal") tags.push("OG");
+
+      return [player, minute ? `(${minute})` : "", tags.length ? `[${tags.join(", ")}]` : ""]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+    }
+
+    function parseScorers(raw) {
+      if (raw === null || raw === undefined) return [];
+
+      if (Array.isArray(raw)) {
+        return raw
+          .flatMap(item => parseScorers(item))
+          .filter(Boolean);
+      }
+
+      if (typeof raw === "object") {
+        const direct = formatScorerEntry(raw);
+        return direct ? [direct] : [];
+      }
+
+      const text = String(raw).trim();
+      const emptyValues = ["", "null", "undefined", "none", "n/a", "na", "-", "{}", "[]"];
+
+      if (emptyValues.includes(text.toLowerCase())) return [];
+
+      if ((text.startsWith("[") && text.endsWith("]")) || (text.startsWith("{") && text.endsWith("}"))) {
+        try {
+          return parseScorers(JSON.parse(text));
+        } catch (error) {
+          // Continue with plain-text parsing below.
+        }
+      }
+
+      return text
+        .replace(/[“”"]/g, "")
+        .replace(/^\{+|\}+$/g, "")
+        .split(/\s*[;|\n]\s*|\s*,\s*(?=[A-Za-zÀ-ž])/)
+        .map(item => item.trim())
+        .filter(item => item && !emptyValues.includes(item.toLowerCase()));
+    }
+
+    function getScorers(game, side) {
+      const raw =
+        game[`${side}_scorers`] ??
+        game[`${side}_scorer`] ??
+        game[`${side}_goal_scorers`] ??
+        game[`${side}_goalscorers`] ??
+        game[`${side}_goals_scorers`] ??
+        "";
+
+      return parseScorers(raw);
+    }
+
+    function renderScorers(game, home, away) {
+      const homeScorers = getScorers(game, "home");
+      const awayScorers = getScorers(game, "away");
+
+      if (!homeScorers.length && !awayScorers.length) {
+        return isFinished(game) || isLive(game)
+          ? `<div class="scorer-empty">Scorers: -</div>`
+          : "";
+      }
+
+      return `
+        <div class="scorer-box">
+          ${homeScorers.length ? `
+            <div class="scorer-line">
+              <span class="scorer-team">${escapeHtml(home.name)}</span>
+              <span>${escapeHtml(homeScorers.join(", "))}</span>
+            </div>
+          ` : ""}
+
+          ${awayScorers.length ? `
+            <div class="scorer-line">
+              <span class="scorer-team">${escapeHtml(away.name)}</span>
+              <span>${escapeHtml(awayScorers.join(", "))}</span>
+            </div>
+          ` : ""}
+        </div>
+      `;
     }
 
     function parseRedCards(raw) {
@@ -2422,6 +2685,8 @@ function renderGroupHealth() {
                       </div>
                       <div class="score">${escapeHtml(getScore(game, "away"))}</div>
                     </div>
+
+                    ${renderScorers(game, home, away)}
                   </div>
 
                   <div class="time-panel">
@@ -2439,6 +2704,92 @@ function renderGroupHealth() {
           </div>
         `;
       }).join("");
+    }
+
+    function renderGroupMatches() {
+      const container = document.getElementById("group-matches-container");
+
+      if (!gamesData.length) {
+        container.innerHTML = `<div class="empty-state">No matches found.</div>`;
+        return;
+      }
+
+      const groupNames = [...new Set([
+        ...standingsData.map(group => group.name),
+        ...gamesData.map(game => getGroupNameFromGame(game)).filter(Boolean)
+      ])]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+
+      if (!groupNames.length) {
+        container.innerHTML = `<div class="empty-state">No group-stage matches found.</div>`;
+        return;
+      }
+
+      container.innerHTML = groupNames.map(groupName => {
+        const groupGames = gamesData
+          .filter(game => getGroupNameFromGame(game) === groupName)
+          .sort((a, b) => {
+            const da = getWibDate(a);
+            const db = getWibDate(b);
+            return (da?.getTime() || 0) - (db?.getTime() || 0);
+          });
+
+        const completed = groupGames.filter(isFinished).length;
+        const total = groupGames.length;
+        const pct = total ? Math.round((completed / total) * 100) : 0;
+
+        return `
+          <section class="group-match-block">
+            <div class="group-match-head">
+              <div>
+                <h2 class="group-match-title">${escapeHtml(displayGroup(groupName))}</h2>
+                <div class="group-match-count">${completed}/${total} matches completed</div>
+              </div>
+
+              <span class="badge blue">${pct}%</span>
+            </div>
+
+            <div class="group-match-list">
+              ${groupGames.length ? groupGames.map(renderGroupMatchCard).join("") : `<div class="empty-state">No matches in this group.</div>`}
+            </div>
+          </section>
+        `;
+      }).join("");
+    }
+
+    function renderGroupMatchCard(game) {
+      const home = getTeam(game, "home");
+      const away = getTeam(game, "away");
+      const d = getWibDate(game);
+      const stadium = getStadium(game);
+      const statusText = isLive(game) ? "LIVE" : isFinished(game) ? "FT" : "Kick-off";
+      const statusColor = isLive(game) ? "red" : isFinished(game) ? "gray" : "blue";
+      const scoreText = isLive(game) || isFinished(game)
+        ? `${escapeHtml(getScore(game, "home") || 0)} - ${escapeHtml(getScore(game, "away") || 0)}`
+        : "vs";
+
+      return `
+        <div class="group-match-row">
+          <div class="group-match-main">
+            <div class="group-match-scoreline">
+              <span>${escapeHtml(home.name)}</span>
+              <strong>${scoreText}</strong>
+              <span>${escapeHtml(away.name)}</span>
+            </div>
+
+            <div class="group-match-meta">
+              ${escapeHtml(formatWibDateTime(d))}${stadium.city || stadium.name ? ` · ${escapeHtml(stadium.city || stadium.name)}` : ""}
+            </div>
+
+            ${renderScorers(game, home, away)}
+          </div>
+
+          <div>
+            <span class="badge ${statusColor}">${escapeHtml(statusText)}</span>
+          </div>
+        </div>
+      `;
     }
 
     function renderTables() {
@@ -2589,6 +2940,7 @@ function renderGroupHealth() {
       renderGroupHealth();
       renderLookaheadMatches();
       renderMatches();
+      renderGroupMatches();
       renderTables();
       renderVenues();
     }
@@ -2645,6 +2997,7 @@ function getMatchBoxLabel(game) {
         document.getElementById("risk-list").innerHTML = "";
         document.getElementById("lookahead-list").innerHTML = "";
         document.getElementById("matches-container").innerHTML = `<div class="empty-state">Matches data tidak bisa dimuat.</div>`;
+        document.getElementById("group-matches-container").innerHTML = `<div class="empty-state">Group matches data tidak bisa dimuat.</div>`;
         document.getElementById("table-container").innerHTML = `<div class="empty-state">Table data tidak bisa dimuat.</div>`;
         document.getElementById("venue-container").innerHTML = `<div class="empty-state">Venue data tidak bisa dimuat.</div>`;
       }
