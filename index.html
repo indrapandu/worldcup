@@ -763,6 +763,77 @@
       color: var(--muted);
     }
 
+    .group-points-wrap {
+      padding: 10px 16px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      overflow-x: auto;
+    }
+
+    .group-points-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .group-points-table th {
+      height: 25px;
+      font-size: 10.5px;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .group-points-table td {
+      height: 30px;
+      font-size: 11.5px;
+      text-align: center;
+      border-bottom: 1px solid var(--line-soft);
+      padding: 0 4px;
+    }
+
+    .group-points-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .group-points-team {
+      width: auto;
+      text-align: left !important;
+    }
+
+    .group-points-stat {
+      width: 34px;
+    }
+
+    .group-points-team-cell {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .group-points-team-cell img {
+      width: 18px;
+      height: 13px;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+      flex: 0 0 auto;
+    }
+
+    .group-points-team-cell span {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .group-points-pts {
+      font-weight: 850;
+      color: var(--text);
+    }
+
     .group-match-list {
       display: grid;
     }
@@ -1245,6 +1316,19 @@
         grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
         font-size: 12.5px;
       }
+
+      .group-points-wrap {
+        padding: 9px 12px 10px;
+      }
+
+      .group-points-table th,
+      .group-points-table td {
+        font-size: 10.5px;
+      }
+
+      .group-points-stat {
+        width: 30px;
+      }
     }
   </style>
 </head>
@@ -1271,9 +1355,9 @@
 
     <nav class="tabs">
       <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-      <button class="tab-btn" onclick="switchTab('matches')">Matches</button>
-      <button class="tab-btn" onclick="switchTab('groupMatches')">Group Matches</button>
-      <button class="tab-btn" onclick="switchTab('table')">Table</button>
+      <button class="tab-btn" onclick="switchTab('matches')">Match Schedule</button>
+      <button class="tab-btn" onclick="switchTab('groupMatches')">Group Fixtures</button>
+      <button class="tab-btn" onclick="switchTab('table')">Group Standings</button>
       <button class="tab-btn" onclick="switchTab('venues')">Venues</button>
     </nav>
 
@@ -2000,6 +2084,7 @@ function normalizeGroup(value) {
         game[`${side}_goal_scorers`] ??
         game[`${side}_goalscorers`] ??
         game[`${side}_goals_scorers`] ??
+        game[`${side}_goals`] ??
         "";
 
       return parseScorers(raw);
@@ -2750,12 +2835,64 @@ function renderGroupHealth() {
               <span class="badge blue">${pct}%</span>
             </div>
 
+            ${renderGroupPointsTable(groupName)}
+
             <div class="group-match-list">
               ${groupGames.length ? groupGames.map(renderGroupMatchCard).join("") : `<div class="empty-state">No matches in this group.</div>`}
             </div>
           </section>
         `;
       }).join("");
+    }
+
+    function renderGroupPointsTable(groupName) {
+      const group = standingsData.find(item => item.name === groupName);
+
+      if (!group || !group.rows || !group.rows.length) {
+        return `
+          <div class="group-points-wrap">
+            <div class="empty-state" style="padding:10px 0;">No points data available.</div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="group-points-wrap">
+          <table class="group-points-table">
+            <colgroup>
+              <col class="group-points-team">
+              <col class="group-points-stat">
+              <col class="group-points-stat">
+              <col class="group-points-stat">
+            </colgroup>
+
+            <thead>
+              <tr>
+                <th class="group-points-team">Team</th>
+                <th>MP</th>
+                <th>GD</th>
+                <th>Pts</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              ${group.rows.map(row => `
+                <tr>
+                  <td class="group-points-team">
+                    <div class="group-points-team-cell">
+                      <img src="${escapeHtml(row.flag)}" alt="" onerror="this.style.visibility='hidden'">
+                      <span>${escapeHtml(row.name)}</span>
+                    </div>
+                  </td>
+                  <td>${escapeHtml(row.mp)}</td>
+                  <td>${escapeHtml(row.gd)}</td>
+                  <td class="group-points-pts">${escapeHtml(row.pts)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
     }
 
     function renderGroupMatchCard(game) {
