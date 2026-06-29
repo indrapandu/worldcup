@@ -1002,9 +1002,9 @@
 
     .knockout-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(190px, 1fr));
+      grid-template-columns: repeat(6, minmax(190px, 1fr));
       gap: 14px;
-      min-width: 1040px;
+      min-width: 1240px;
       align-items: start;
     }
 
@@ -1027,6 +1027,10 @@
     .ko-column.sf {
       padding-top: 204px;
       gap: 190px;
+    }
+
+    .ko-column.third {
+      padding-top: 344px;
     }
 
     .ko-column.final {
@@ -2868,6 +2872,7 @@
       if (stage === STAGE_NAMES.R16) return "R16";
       if (stage === STAGE_NAMES.QF) return "QF";
       if (stage === STAGE_NAMES.SF) return "SF";
+      if (stage === STAGE_NAMES.THIRD) return "THIRD";
       if (stage === STAGE_NAMES.FINAL) return "FINAL";
 
       return "";
@@ -2925,6 +2930,7 @@
         { code: "R16", title: "R16", className: "r16" },
         { code: "QF", title: "QF", className: "qf" },
         { code: "SF", title: "SF", className: "sf" },
+        { code: "THIRD", title: "Third Place", className: "third" },
         { code: "FINAL", title: "Final", className: "final" }
       ];
 
