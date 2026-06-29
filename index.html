@@ -49,7 +49,7 @@
       box-shadow: none;
     }
 
-.topbar {
+    .topbar {
       padding: 18px 24px;
       border-bottom: 1px solid rgba(229, 231, 235, 0.85);
       display: flex;
@@ -85,8 +85,7 @@
       font-size: 15px;
       font-weight: 900;
       letter-spacing: -0.4px;
-      background:
-        linear-gradient(135deg, #111827 0%, #1d4ed8 52%, #16a34a 100%);
+      background: linear-gradient(135deg, #111827 0%, #1d4ed8 52%, #16a34a 100%);
       box-shadow: 0 12px 24px rgba(37, 99, 235, 0.20);
       position: relative;
       overflow: hidden;
@@ -105,27 +104,6 @@
 
     .brand {
       min-width: 0;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 3px;
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--blue);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: var(--green);
-      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
     }
 
     .brand h1 {
@@ -160,21 +138,6 @@
       box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
     }
 
-    .live-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: var(--green);
-      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 0 0 auto;
-    }
-
     .refresh-btn {
       border: 1px solid rgba(17, 24, 39, 0.10);
       background: var(--accent);
@@ -195,23 +158,17 @@
       box-shadow: 0 14px 26px rgba(17, 24, 39, 0.20);
     }
 
-    .refresh-btn:active {
-      transform: translateY(0);
-      box-shadow: 0 8px 16px rgba(17, 24, 39, 0.14);
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 24px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      overflow-x: auto;
+      position: sticky;
+      top: var(--topbar-height, 72px);
+      z-index: 9;
     }
-
-.tabs {
-  display: flex;
-  gap: 4px;
-  padding: 0 24px;
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  overflow-x: auto;
-
-  position: sticky;
-  top: var(--topbar-height, 72px);
-  z-index: 9;
-}
 
     .tab-btn {
       border: none;
@@ -292,93 +249,12 @@
       line-height: 1.35;
     }
 
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  align-items: start;
-}
-
-.dashboard-grid .panel {
-  height: auto;
-}
-
-.progress-summary {
-  margin-bottom: 14px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--soft);
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.progress-summary strong {
-  color: var(--text);
-}
-    
-.progress-count {
-  margin-top: 3px;
-  font-size: 10.5px;
-  color: var(--muted);
-  font-weight: 500;
-  line-height: 1.25;
-}
-.risk-list {
-  display: block;
-}
-
-.group-health-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.group-health-column {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-}
-
-.health-item {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 9px 10px;
-  background: #fff;
-}
-
-.health-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 7px;
-}
-
-.health-title {
-  font-size: 12.5px;
-  font-weight: 750;
-  margin: 0;
-}
-
-.health-count {
-  font-size: 11px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.health-progress {
-  height: 6px;
-  background: #eef2f7;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.health-progress-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 999px;
-}
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: start;
+    }
 
     .two-col {
       display: grid;
@@ -413,6 +289,14 @@
       font-weight: 600;
     }
 
+    .progress-count {
+      margin-top: 3px;
+      font-size: 10.5px;
+      color: var(--muted);
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
     .progress-track {
       height: 10px;
       background: #eef2f7;
@@ -437,6 +321,58 @@
     .critical-list {
       display: grid;
       gap: 10px;
+    }
+
+    .group-health-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .group-health-column {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .health-item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 9px 10px;
+      background: #fff;
+    }
+
+    .health-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .health-title {
+      font-size: 12.5px;
+      font-weight: 750;
+      margin: 0;
+    }
+
+    .health-count {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .health-progress {
+      height: 6px;
+      background: #eef2f7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .health-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
     }
 
     .mini-card {
@@ -488,14 +424,6 @@
       flex: 0 0 auto;
     }
 
-    .match-meta-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
     .match-date-pill {
       display: inline-flex;
       align-items: center;
@@ -512,42 +440,6 @@
     .priority-line {
       margin-top: 6px;
       color: var(--muted);
-    }
-
-    .health-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .health-main {
-      min-width: 0;
-    }
-
-    .health-title {
-      font-size: 13px;
-      font-weight: 750;
-      margin-bottom: 5px;
-    }
-
-    .health-sub {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .health-progress {
-      margin-top: 9px;
-      height: 7px;
-      background: #eef2f7;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .health-progress-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 999px;
     }
 
     .badge {
@@ -1023,7 +915,225 @@
       border-radius: 999px;
       background: var(--blue);
     }
-    
+
+    /* Match Schedule: Past and Upcoming */
+    .schedule-section {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+      margin-bottom: 18px;
+    }
+
+    .schedule-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--soft);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .schedule-section-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 850;
+      letter-spacing: -0.2px;
+    }
+
+    .schedule-section-meta {
+      margin-top: 3px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    .schedule-toggle-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 750;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .schedule-chevron {
+      display: inline-block;
+      transition: transform 0.18s ease;
+    }
+
+    .schedule-section.collapsed .schedule-section-body {
+      display: none;
+    }
+
+    .schedule-section.collapsed .schedule-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .schedule-section-body .day-header,
+    .schedule-section-body .match-grid {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    .schedule-section-body .day-header {
+      margin-top: 0;
+    }
+
+    .schedule-section-body .match-card {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    /* Knock Out bracket */
+    .knockout-panel {
+      overflow: hidden;
+    }
+
+    .knockout-board {
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .knockout-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(190px, 1fr));
+      gap: 14px;
+      min-width: 1040px;
+      align-items: start;
+    }
+
+    .ko-column {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .ko-column.r16 {
+      padding-top: 42px;
+      gap: 34px;
+    }
+
+    .ko-column.qf {
+      padding-top: 96px;
+      gap: 88px;
+    }
+
+    .ko-column.sf {
+      padding-top: 204px;
+      gap: 190px;
+    }
+
+    .ko-column.final {
+      padding-top: 344px;
+    }
+
+    .ko-round-head {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      margin-bottom: 2px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .ko-match-card {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #fff;
+      padding: 11px;
+      min-height: 108px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .ko-match-card::after {
+      content: "";
+      position: absolute;
+      right: -15px;
+      top: 50%;
+      width: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .ko-column.final .ko-match-card::after {
+      display: none;
+    }
+
+    .ko-match-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 9px;
+      align-items: center;
+    }
+
+    .ko-match-no {
+      font-size: 10.5px;
+      color: var(--muted);
+      font-weight: 750;
+    }
+
+    .ko-team-row {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      gap: 7px;
+      align-items: center;
+      min-height: 27px;
+    }
+
+    .ko-team-row img {
+      width: 20px;
+      height: 14px;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+    }
+
+    .ko-team-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12.5px;
+      font-weight: 650;
+    }
+
+    .ko-score {
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .ko-match-meta {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 10.8px;
+      line-height: 1.35;
+    }
+
+    .ko-empty {
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      background: var(--soft);
+    }
+
     .site-footer {
       border-top: 1px solid var(--line);
       background: #fff;
@@ -1051,6 +1161,7 @@
       color: #9ca3af;
       font-size: 11px;
     }
+
     @media (min-width: 981px) {
       .topbar,
       .tabs,
@@ -1128,10 +1239,6 @@
         font-size: 13px;
       }
 
-      .eyebrow {
-        font-size: 10px;
-      }
-
       .brand h1 {
         font-size: 18px;
       }
@@ -1144,10 +1251,6 @@
       .meta-pill {
         font-size: 10px;
         padding: 4px 7px;
-      }
-
-      .header-actions {
-        margin-top: 1px;
       }
 
       .refresh-btn {
@@ -1206,10 +1309,10 @@
         border-radius: 15px;
       }
 
-.progress-row {
-  grid-template-columns: 125px 1fr 42px;
-  gap: 8px;
-}
+      .progress-row {
+        grid-template-columns: 125px 1fr 42px;
+        gap: 8px;
+      }
 
       .progress-name {
         font-size: 11px;
@@ -1250,6 +1353,64 @@
         font-size: 13px;
       }
 
+      .group-health-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .health-item {
+        padding: 8px 9px;
+      }
+
+      .health-title {
+        font-size: 12px;
+      }
+
+      .health-count {
+        font-size: 10.5px;
+      }
+
+      .schedule-section-head {
+        padding: 12px;
+      }
+
+      .schedule-section-title {
+        font-size: 15px;
+      }
+
+      .schedule-section-body .match-card {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .group-match-head,
+      .group-match-row {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .group-match-row {
+        grid-template-columns: 1fr;
+      }
+
+      .group-match-scoreline {
+        grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
+        font-size: 12.5px;
+      }
+
+      .group-points-wrap {
+        padding: 9px 12px 10px;
+      }
+
+      .group-points-table th,
+      .group-points-table td {
+        font-size: 10.5px;
+      }
+
+      .group-points-stat {
+        width: 30px;
+      }
+
       .standings-title {
         font-size: 15px;
         padding: 12px;
@@ -1285,50 +1446,6 @@
       .team-cell span {
         font-size: 10.5px;
       }
-      .group-health-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-      
-      .health-item {
-        padding: 8px 9px;
-      }
-      
-      .health-title {
-        font-size: 12px;
-      }
-      
-      .health-count {
-        font-size: 10.5px;
-      }
-
-      .group-match-head,
-      .group-match-row {
-        padding-left: 12px;
-        padding-right: 12px;
-      }
-
-      .group-match-row {
-        grid-template-columns: 1fr;
-      }
-
-      .group-match-scoreline {
-        grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
-        font-size: 12.5px;
-      }
-
-      .group-points-wrap {
-        padding: 9px 12px 10px;
-      }
-
-      .group-points-table th,
-      .group-points-table td {
-        font-size: 10.5px;
-      }
-
-      .group-points-stat {
-        width: 30px;
-      }
     }
   </style>
 </head>
@@ -1355,6 +1472,7 @@
 
     <nav class="tabs">
       <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" onclick="switchTab('knockout')">Knock Out</button>
       <button class="tab-btn" onclick="switchTab('matches')">Match Schedule</button>
       <button class="tab-btn" onclick="switchTab('groupMatches')">Group Fixtures</button>
       <button class="tab-btn" onclick="switchTab('table')">Group Standings</button>
@@ -1387,6 +1505,13 @@
         </div>
       </section>
 
+      <section id="knockout" class="view">
+        <div class="panel knockout-panel">
+          <h2 class="section-title">Knock Out</h2>
+          <div id="knockout-container" class="knockout-board"></div>
+        </div>
+      </section>
+
       <section id="matches" class="view">
         <div id="matches-container"></div>
       </section>
@@ -1403,9 +1528,10 @@
         <div id="venue-container" class="venue-grid"></div>
       </section>
     </main>
+
     <footer class="site-footer">
       <div>
-        Created by 
+        Created by
         <a href="https://www.linkedin.com/in/indrapandu" target="_blank" rel="noopener noreferrer">
           Indra Pandu Prasetyo
         </a>
@@ -1470,18 +1596,15 @@
       "1":  { id: "1",  name: "Estadio Azteca", city: "Mexico City", country: "Mexico", region: "Central", offsetToWIB: 13 },
       "2":  { id: "2",  name: "Estadio Akron", city: "Guadalajara", country: "Mexico", region: "Central", offsetToWIB: 13 },
       "3":  { id: "3",  name: "Estadio BBVA", city: "Monterrey", country: "Mexico", region: "Central", offsetToWIB: 13 },
-
       "4":  { id: "4",  name: "AT&T Stadium", city: "Dallas", country: "United States", region: "Central", offsetToWIB: 12 },
       "5":  { id: "5",  name: "NRG Stadium", city: "Houston", country: "United States", region: "Central", offsetToWIB: 12 },
       "6":  { id: "6",  name: "Arrowhead Stadium", city: "Kansas City", country: "United States", region: "Central", offsetToWIB: 12 },
-
       "7":  { id: "7",  name: "Mercedes-Benz Stadium", city: "Atlanta", country: "United States", region: "Eastern", offsetToWIB: 11 },
       "8":  { id: "8",  name: "Hard Rock Stadium", city: "Miami", country: "United States", region: "Eastern", offsetToWIB: 11 },
       "9":  { id: "9",  name: "Gillette Stadium", city: "Boston", country: "United States", region: "Eastern", offsetToWIB: 11 },
       "10": { id: "10", name: "Lincoln Financial Field", city: "Philadelphia", country: "United States", region: "Eastern", offsetToWIB: 11 },
       "11": { id: "11", name: "MetLife Stadium", city: "New York/New Jersey", country: "United States", region: "Eastern", offsetToWIB: 11 },
       "12": { id: "12", name: "BMO Field", city: "Toronto", country: "Canada", region: "Eastern", offsetToWIB: 11 },
-
       "13": { id: "13", name: "BC Place", city: "Vancouver", country: "Canada", region: "Western", offsetToWIB: 14 },
       "14": { id: "14", name: "Lumen Field", city: "Seattle", country: "United States", region: "Western", offsetToWIB: 14 },
       "15": { id: "15", name: "Levi's Stadium", city: "San Francisco Bay Area", country: "United States", region: "Western", offsetToWIB: 14 },
@@ -1494,10 +1617,11 @@
 
       const tabIndex = {
         dashboard: 0,
-        matches: 1,
-        groupMatches: 2,
-        table: 3,
-        venues: 4
+        knockout: 1,
+        matches: 2,
+        groupMatches: 3,
+        table: 4,
+        venues: 5
       }[tabName];
 
       document.querySelectorAll(".tab-btn")[tabIndex].classList.add("active");
@@ -1527,11 +1651,9 @@
     function normalizeUrl(url) {
       if (!url) return "";
       const value = String(url).trim();
-
       if (value.startsWith("https://") || value.startsWith("http://")) return value;
       if (value.startsWith("//")) return "https:" + value;
       if (value.startsWith("/")) return "https://worldcup26.ir" + value;
-
       return value;
     }
 
@@ -1582,26 +1704,26 @@
       return map[name] || name;
     }
 
-function normalizeGroup(value) {
-  if (value === null || value === undefined) return "";
+    function normalizeGroup(value) {
+      if (value === null || value === undefined) return "";
 
-  let raw = value;
-  if (Array.isArray(raw)) raw = raw[0];
+      let raw = value;
+      if (Array.isArray(raw)) raw = raw[0];
 
-  const s = String(raw).trim();
-  if (!s) return "";
+      const s = String(raw).trim();
+      if (!s) return "";
 
-  const groupMatch = s.match(/\b(?:group|grp)[\s:_-]*([A-L])\b/i);
-  if (groupMatch) return groupMatch[1].toUpperCase();
+      const groupMatch = s.match(/\b(?:group|grp)[\s:_-]*([A-L])\b/i);
+      if (groupMatch) return groupMatch[1].toUpperCase();
 
-  const singleLetter = s.match(/^\s*([A-L])\s*$/i);
-  if (singleLetter) return singleLetter[1].toUpperCase();
+      const singleLetter = s.match(/^\s*([A-L])\s*$/i);
+      if (singleLetter) return singleLetter[1].toUpperCase();
 
-  const looseLetter = s.match(/\b([A-L])\b/i);
-  if (looseLetter) return looseLetter[1].toUpperCase();
+      const looseLetter = s.match(/\b([A-L])\b/i);
+      if (looseLetter) return looseLetter[1].toUpperCase();
 
-  return "";
-}
+      return "";
+    }
 
     function displayGroup(group) {
       const g = normalizeGroup(group);
@@ -1675,8 +1797,8 @@ function normalizeGroup(value) {
         });
       });
     }
-    
-  function getTeamJsonOrder(teamId, teamName) {
+
+    function getTeamJsonOrder(teamId, teamName) {
       const idKey = String(teamId ?? "");
 
       if (idKey && teamOrderById[idKey] !== undefined) {
@@ -1691,7 +1813,7 @@ function normalizeGroup(value) {
 
       return 9999;
     }
-    
+
     function getTeamById(teamId) {
       const team = teamsById[String(teamId)] || {};
 
@@ -2160,6 +2282,17 @@ function normalizeGroup(value) {
       return normalizeGroup(home.group);
     }
 
+    function getMatchBoxLabel(game) {
+      const stage = getMatchCategoryLabel(game);
+      const group = getGroupNameFromGame(game);
+
+      if (stage === STAGE_NAMES.GROUP && group) {
+        return `${stage} · Group ${group}`;
+      }
+
+      return stage;
+    }
+
     function getStageStats(games) {
       const map = {};
 
@@ -2479,98 +2612,118 @@ function normalizeGroup(value) {
       `).join("");
     }
 
-function renderProgress() {
-  const stats = getStageStats(gamesData);
+    function renderProgress() {
+      const stats = getStageStats(gamesData);
 
-  if (!stats.length) {
-    document.getElementById("progress-container").innerHTML = `<div class="empty-state">No stage data available.</div>`;
-    return;
-  }
+      if (!stats.length) {
+        document.getElementById("progress-container").innerHTML = `<div class="empty-state">No stage data available.</div>`;
+        return;
+      }
 
-  document.getElementById("progress-container").innerHTML = stats.map(row => {
-    const pct = row.total ? Math.round((row.done / row.total) * 100) : 0;
+      document.getElementById("progress-container").innerHTML = stats.map(row => {
+        const pct = row.total ? Math.round((row.done / row.total) * 100) : 0;
 
-    return `
-      <div class="progress-row">
-        <div class="progress-name">
-          <div>${escapeHtml(row.stage)}</div>
-          <div class="progress-count">${row.done} / ${row.total} matches</div>
+        return `
+          <div class="progress-row">
+            <div class="progress-name">
+              <div>${escapeHtml(row.stage)}</div>
+              <div class="progress-count">${row.done} / ${row.total} matches</div>
+            </div>
+
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${pct}%"></div>
+            </div>
+
+            <div class="progress-percent">${pct}%</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderGroupHealth() {
+      if (!standingsData.length) {
+        document.getElementById("risk-list").innerHTML = `<div class="empty-state">No group data available.</div>`;
+        return;
+      }
+
+      const groups = standingsData
+        .map(group => {
+          const groupGames = gamesData.filter(game => getGroupNameFromGame(game) === group.name);
+
+          const total = groupGames.length || (
+            group.rows.length > 1
+              ? group.rows.length * (group.rows.length - 1) / 2
+              : group.rows.length
+          );
+
+          const actual = groupGames.filter(isFinished).length;
+          const pct = total ? Math.round((actual / total) * 100) : 0;
+
+          return {
+            name: group.name,
+            title: displayGroup(group.name),
+            actual,
+            total,
+            pct
+          };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      const leftGroups = groups.filter(group => group.name >= "A" && group.name <= "F");
+      const rightGroups = groups.filter(group => group.name >= "G" && group.name <= "L");
+
+      function renderHealthColumn(items) {
+        return items.map(group => `
+          <div class="health-item">
+            <div class="health-row">
+              <div class="health-title">${escapeHtml(group.title)}</div>
+              <div class="health-count">${group.actual}/${group.total} matches</div>
+            </div>
+
+            <div class="health-progress">
+              <div class="health-progress-fill" style="width:${group.pct}%"></div>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      document.getElementById("risk-list").innerHTML = `
+        <div class="group-health-grid">
+          <div class="group-health-column">
+            ${renderHealthColumn(leftGroups)}
+          </div>
+
+          <div class="group-health-column">
+            ${renderHealthColumn(rightGroups)}
+          </div>
         </div>
-
-        <div class="progress-track">
-          <div class="progress-fill" style="width:${pct}%"></div>
-        </div>
-
-        <div class="progress-percent">${pct}%</div>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderGroupHealth() {
-  if (!standingsData.length) {
-    document.getElementById("risk-list").innerHTML = `<div class="empty-state">No group data available.</div>`;
-    return;
-  }
-
-  const groups = standingsData
-    .map(group => {
-      const groupGames = gamesData.filter(game => getGroupNameFromGame(game) === group.name);
-
-      const total = groupGames.length || (
-        group.rows.length > 1
-          ? group.rows.length * (group.rows.length - 1) / 2
-          : group.rows.length
-      );
-
-      const actual = groupGames.filter(isFinished).length;
-      const pct = total ? Math.round((actual / total) * 100) : 0;
-
-      return {
-        name: group.name,
-        title: displayGroup(group.name),
-        actual,
-        total,
-        pct
-      };
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const leftGroups = groups.filter(group => group.name >= "A" && group.name <= "F");
-  const rightGroups = groups.filter(group => group.name >= "G" && group.name <= "L");
-
-  function renderHealthColumn(items) {
-    return items.map(group => `
-      <div class="health-item">
-        <div class="health-row">
-          <div class="health-title">${escapeHtml(group.title)}</div>
-          <div class="health-count">${group.actual}/${group.total} matches</div>
-        </div>
-
-        <div class="health-progress">
-          <div class="health-progress-fill" style="width:${group.pct}%"></div>
-        </div>
-      </div>
-    `).join("");
-  }
-
-  document.getElementById("risk-list").innerHTML = `
-    <div class="group-health-grid">
-      <div class="group-health-column">
-        ${renderHealthColumn(leftGroups)}
-      </div>
-
-      <div class="group-health-column">
-        ${renderHealthColumn(rightGroups)}
-      </div>
-    </div>
-  `;
-}
+      `;
+    }
 
     function getMatchTitle(game) {
       const home = getTeam(game, "home").name;
       const away = getTeam(game, "away").name;
       return `${home} vs ${away}`;
+    }
+
+    function getRankMap() {
+      const map = {};
+
+      standingsData.forEach(group => {
+        map[group.name] = {};
+
+        group.rows.forEach((row, index) => {
+          map[group.name][String(row.team_id)] = {
+            rank: index + 1,
+            pts: row.pts,
+            gd: row.gd,
+            mp: row.mp,
+            name: row.name
+          };
+        });
+      });
+
+      return map;
     }
 
     function getMatchPriorityInfo(game, rankMap) {
@@ -2685,110 +2838,259 @@ function renderGroupHealth() {
       }).join("");
     }
 
-    function getRankMap() {
-      const map = {};
+    function toggleScheduleSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      if (!section) return;
 
-      standingsData.forEach(group => {
-        map[group.name] = {};
+      const isCollapsed = section.classList.toggle("collapsed");
+      const btn = section.querySelector(".schedule-toggle-btn");
 
-        group.rows.forEach((row, index) => {
-          map[group.name][String(row.team_id)] = {
-            rank: index + 1,
-            pts: row.pts,
-            gd: row.gd,
-            mp: row.mp,
-            name: row.name
-          };
-        });
-      });
-
-      return map;
+      if (btn) {
+        btn.setAttribute("aria-expanded", String(!isCollapsed));
+      }
     }
 
-    function renderCriticalMatches() {
-      renderLookaheadMatches();
+    function getMatchNumber(game) {
+      return (
+        game.match_number ||
+        game.match_no ||
+        game.matchNo ||
+        game.number ||
+        game.id ||
+        ""
+      );
+    }
+
+    function getKnockoutRoundCode(game) {
+      const stage = getMatchStage(game);
+
+      if (stage === STAGE_NAMES.R32) return "R32";
+      if (stage === STAGE_NAMES.R16) return "R16";
+      if (stage === STAGE_NAMES.QF) return "QF";
+      if (stage === STAGE_NAMES.SF) return "SF";
+      if (stage === STAGE_NAMES.FINAL) return "FINAL";
+
+      return "";
+    }
+
+    function renderKnockoutMatchCard(game) {
+      const home = getTeam(game, "home");
+      const away = getTeam(game, "away");
+      const d = getWibDate(game);
+      const stadium = getStadium(game);
+
+      const statusText = isLive(game) ? "LIVE" : isFinished(game) ? "FT" : "Scheduled";
+      const statusColor = isLive(game) ? "red" : isFinished(game) ? "gray" : "blue";
+
+      const homeScore = getScore(game, "home");
+      const awayScore = getScore(game, "away");
+
+      return `
+        <div class="ko-match-card">
+          <div class="ko-match-top">
+            <span class="ko-match-no">${getMatchNumber(game) ? `Match ${escapeHtml(getMatchNumber(game))}` : escapeHtml(getMatchBoxLabel(game))}</span>
+            <span class="badge ${statusColor}">${escapeHtml(statusText)}</span>
+          </div>
+
+          <div class="ko-team-row">
+            <img src="${escapeHtml(home.flag)}" alt="" onerror="this.style.visibility='hidden'">
+            <div class="ko-team-name">${escapeHtml(home.name)}</div>
+            <div class="ko-score">${escapeHtml(homeScore)}</div>
+          </div>
+
+          <div class="ko-team-row">
+            <img src="${escapeHtml(away.flag)}" alt="" onerror="this.style.visibility='hidden'">
+            <div class="ko-team-name">${escapeHtml(away.name)}</div>
+            <div class="ko-score">${escapeHtml(awayScore)}</div>
+          </div>
+
+          <div class="ko-match-meta">
+            ${escapeHtml(formatWibDateTime(d))}<br>
+            ${escapeHtml(stadium.city || stadium.name || "")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderKnockout() {
+      const container = document.getElementById("knockout-container");
+
+      if (!gamesData.length) {
+        container.innerHTML = `<div class="empty-state">No matches found.</div>`;
+        return;
+      }
+
+      const rounds = [
+        { code: "R32", title: "R32", className: "r32" },
+        { code: "R16", title: "R16", className: "r16" },
+        { code: "QF", title: "QF", className: "qf" },
+        { code: "SF", title: "SF", className: "sf" },
+        { code: "FINAL", title: "Final", className: "final" }
+      ];
+
+      const knockoutGames = gamesData
+        .filter(game => getKnockoutRoundCode(game))
+        .sort((a, b) => {
+          const da = getWibDate(a);
+          const db = getWibDate(b);
+          return (da?.getTime() || 0) - (db?.getTime() || 0);
+        });
+
+      if (!knockoutGames.length) {
+        container.innerHTML = `<div class="empty-state">No knockout matches found.</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="knockout-grid">
+          ${rounds.map(round => {
+            const games = knockoutGames.filter(game => getKnockoutRoundCode(game) === round.code);
+
+            return `
+              <div class="ko-column ${round.className}">
+                <div class="ko-round-head">${escapeHtml(round.title)}</div>
+
+                ${
+                  games.length
+                    ? games.map(renderKnockoutMatchCard).join("")
+                    : `<div class="ko-empty">Awaiting qualifiers</div>`
+                }
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
     }
 
     function renderMatches() {
+      const container = document.getElementById("matches-container");
+
       if (!gamesData.length) {
-        document.getElementById("matches-container").innerHTML = `<div class="empty-state">No matches found.</div>`;
+        container.innerHTML = `<div class="empty-state">No matches found.</div>`;
         return;
       }
+
+      const now = getTodayWibDate();
 
       const sorted = [...gamesData].sort((a, b) => {
         const da = getWibDate(a);
         const db = getWibDate(b);
-        return (da?.getTime() || 0) - (db?.getTime() || 0);
+        return (da?.getTime() || Number.MAX_SAFE_INTEGER) - (db?.getTime() || Number.MAX_SAFE_INTEGER);
       });
 
-      const grouped = sorted.reduce((acc, game) => {
+      function isPastMatch(game) {
         const d = getWibDate(game);
-        const key = dateKey(d);
 
-        if (!acc[key]) {
-          acc[key] = {
-            date: d,
-            games: []
-          };
-        }
+        return (
+          isFinished(game) ||
+          (!isLive(game) && d && d.getTime() < now.getTime())
+        );
+      }
 
-        acc[key].games.push(game);
-        return acc;
-      }, {});
+      const pastGames = sorted.filter(isPastMatch);
+      const upcomingGames = sorted.filter(game => !isPastMatch(game));
 
-      document.getElementById("matches-container").innerHTML = Object.values(grouped).map(section => {
+      function renderMatchCard(game) {
+        const home = getTeam(game, "home");
+        const away = getTeam(game, "away");
+        const d = getWibDate(game);
+        const stadium = getStadium(game);
+        const statusText = isLive(game) ? "LIVE" : isFinished(game) ? "FT" : "Kick-off";
+        const statusColor = isLive(game) ? "red" : isFinished(game) ? "gray" : "blue";
+
         return `
-          <div class="day-header">${escapeHtml(getSectionTitle(section.games, section.date))}</div>
-          <div class="match-grid">
-            ${section.games.map(game => {
-              const home = getTeam(game, "home");
-              const away = getTeam(game, "away");
-              const d = getWibDate(game);
-              const stadium = getStadium(game);
-              const statusText = isLive(game) ? "LIVE" : isFinished(game) ? "FT" : "Kick-off";
-              const statusColor = isLive(game) ? "red" : isFinished(game) ? "gray" : "blue";
+          <div class="match-card">
+            <div>
+              <div class="group-label">${escapeHtml(getMatchBoxLabel(game))}</div>
 
-              return `
-                <div class="match-card">
-                  <div>
-                    <div class="group-label">${escapeHtml(getMatchBoxLabel(game))}</div>
-
-                    <div class="team-row">
-                      <img class="flag" src="${escapeHtml(home.flag)}" alt="" onerror="this.style.visibility='hidden'">
-                      <div class="team-name">
-                        ${escapeHtml(home.name)}
-                        ${getRedCards(game, "home").length ? `<span class="red-card"></span>` : ""}
-                      </div>
-                      <div class="score">${escapeHtml(getScore(game, "home"))}</div>
-                    </div>
-
-                    <div class="team-row">
-                      <img class="flag" src="${escapeHtml(away.flag)}" alt="" onerror="this.style.visibility='hidden'">
-                      <div class="team-name">
-                        ${escapeHtml(away.name)}
-                        ${getRedCards(game, "away").length ? `<span class="red-card"></span>` : ""}
-                      </div>
-                      <div class="score">${escapeHtml(getScore(game, "away"))}</div>
-                    </div>
-
-                    ${renderScorers(game, home, away)}
-                  </div>
-
-                  <div class="time-panel">
-                    <span class="badge ${statusColor}">${escapeHtml(statusText)}</span>
-                    <div class="time-main">${escapeHtml(isLive(game) ? (game.time_elapsed || formatWibTime(d)) : formatWibTime(d))}</div>
-                    <div class="time-note">
-                      WIB<br>
-                      ${escapeHtml(stadium.city || stadium.name || "")}<br>
-                      ${escapeHtml(formatVenueTime(game))}
-                    </div>
-                  </div>
+              <div class="team-row">
+                <img class="flag" src="${escapeHtml(home.flag)}" alt="" onerror="this.style.visibility='hidden'">
+                <div class="team-name">
+                  ${escapeHtml(home.name)}
+                  ${getRedCards(game, "home").length ? `<span class="red-card"></span>` : ""}
                 </div>
-              `;
-            }).join("")}
+                <div class="score">${escapeHtml(getScore(game, "home"))}</div>
+              </div>
+
+              <div class="team-row">
+                <img class="flag" src="${escapeHtml(away.flag)}" alt="" onerror="this.style.visibility='hidden'">
+                <div class="team-name">
+                  ${escapeHtml(away.name)}
+                  ${getRedCards(game, "away").length ? `<span class="red-card"></span>` : ""}
+                </div>
+                <div class="score">${escapeHtml(getScore(game, "away"))}</div>
+              </div>
+
+              ${renderScorers(game, home, away)}
+            </div>
+
+            <div class="time-panel">
+              <span class="badge ${statusColor}">${escapeHtml(statusText)}</span>
+              <div class="time-main">${escapeHtml(isLive(game) ? (game.time_elapsed || formatWibTime(d)) : formatWibTime(d))}</div>
+              <div class="time-note">
+                WIB<br>
+                ${escapeHtml(stadium.city || stadium.name || "")}<br>
+                ${escapeHtml(formatVenueTime(game))}
+              </div>
+            </div>
           </div>
         `;
-      }).join("");
+      }
+
+      function renderGroupedMatches(sectionGames) {
+        if (!sectionGames.length) {
+          return `<div class="empty-state">No matches found.</div>`;
+        }
+
+        const grouped = sectionGames.reduce((acc, game) => {
+          const d = getWibDate(game);
+          const key = dateKey(d);
+
+          if (!acc[key]) {
+            acc[key] = {
+              date: d,
+              games: []
+            };
+          }
+
+          acc[key].games.push(game);
+          return acc;
+        }, {});
+
+        return Object.values(grouped).map(section => `
+          <div class="day-header">${escapeHtml(getSectionTitle(section.games, section.date))}</div>
+          <div class="match-grid">
+            ${section.games.map(renderMatchCard).join("")}
+          </div>
+        `).join("");
+      }
+
+      function renderScheduleSection(id, title, games, defaultOpen) {
+        return `
+          <section id="${id}" class="schedule-section ${defaultOpen ? "" : "collapsed"}">
+            <div class="schedule-section-head">
+              <div>
+                <h2 class="schedule-section-title">${escapeHtml(title)}</h2>
+                <div class="schedule-section-meta">${games.length} matches</div>
+              </div>
+
+              <button class="schedule-toggle-btn" onclick="toggleScheduleSection('${id}')" aria-expanded="${defaultOpen}">
+                <span class="schedule-chevron">▾</span>
+                <span>Show / Hide</span>
+              </button>
+            </div>
+
+            <div class="schedule-section-body">
+              ${renderGroupedMatches(games)}
+            </div>
+          </section>
+        `;
+      }
+
+      container.innerHTML = `
+        ${renderScheduleSection("past-matches-section", "Past", pastGames, false)}
+        ${renderScheduleSection("upcoming-matches-section", "Upcoming", upcomingGames, true)}
+      `;
     }
 
     function renderGroupMatches() {
@@ -3076,22 +3378,13 @@ function renderGroupHealth() {
       renderProgress();
       renderGroupHealth();
       renderLookaheadMatches();
+      renderKnockout();
       renderMatches();
       renderGroupMatches();
       renderTables();
       renderVenues();
     }
 
-function getMatchBoxLabel(game) {
-  const stage = getMatchCategoryLabel(game);
-  const group = getGroupNameFromGame(game);
-
-  if (stage === STAGE_NAMES.GROUP && group) {
-    return `${stage} · Group ${group}`;
-  }
-
-  return stage;
-}
     async function fetchData() {
       showStatus("Loading data...");
 
@@ -3124,7 +3417,6 @@ function getMatchBoxLabel(game) {
 
         renderAll();
         hideStatus();
-
       } catch (error) {
         console.error(error);
         showStatus("Failed to load data. Please check API connection or CORS proxy.", "error");
@@ -3133,6 +3425,7 @@ function getMatchBoxLabel(game) {
         document.getElementById("progress-container").innerHTML = `<div class="empty-state">Data tidak bisa dimuat.</div>`;
         document.getElementById("risk-list").innerHTML = "";
         document.getElementById("lookahead-list").innerHTML = "";
+        document.getElementById("knockout-container").innerHTML = `<div class="empty-state">Knockout data tidak bisa dimuat.</div>`;
         document.getElementById("matches-container").innerHTML = `<div class="empty-state">Matches data tidak bisa dimuat.</div>`;
         document.getElementById("group-matches-container").innerHTML = `<div class="empty-state">Group matches data tidak bisa dimuat.</div>`;
         document.getElementById("table-container").innerHTML = `<div class="empty-state">Table data tidak bisa dimuat.</div>`;
@@ -3140,22 +3433,22 @@ function getMatchBoxLabel(game) {
       }
     }
 
-function updateStickyTabPosition() {
-  const topbar = document.querySelector(".topbar");
-  if (!topbar) return;
+    function updateStickyTabPosition() {
+      const topbar = document.querySelector(".topbar");
+      if (!topbar) return;
 
-  document.documentElement.style.setProperty(
-    "--topbar-height",
-    topbar.offsetHeight + "px"
-  );
-}
+      document.documentElement.style.setProperty(
+        "--topbar-height",
+        topbar.offsetHeight + "px"
+      );
+    }
 
-window.addEventListener("resize", updateStickyTabPosition);
+    window.addEventListener("resize", updateStickyTabPosition);
 
-window.onload = function () {
-  updateStickyTabPosition();
-  fetchData();
-};
+    window.onload = function () {
+      updateStickyTabPosition();
+      fetchData();
+    };
   </script>
 </body>
-</html>
+  </html>
